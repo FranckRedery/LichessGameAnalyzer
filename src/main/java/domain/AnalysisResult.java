@@ -1,35 +1,55 @@
 package domain;
 
+import domain.enums.ErrorCategory;
+import domain.enums.ErrorSeverity;
+import domain.enums.GamePhase;
+
+import java.util.List;
+import java.util.Map;
+import java.util.Optional;
+import java.util.stream.Collectors;
 
 public class AnalysisResult {
-    private int inaccuracies;
-    private int mistakes;
-    private int blunders;
-    // Altri dati utili (centipawn loss, suggerimenti, ecc.)
 
-    public int getInaccuracies() {
-        return inaccuracies;
+    private final List<GameError> errors;
+
+    public AnalysisResult(List<GameError> errors) {
+        this.errors = List.copyOf(errors);
     }
 
-    public void setInaccuracies(int inaccuracies) {
-        this.inaccuracies = inaccuracies;
+    public List<GameError> getErrors() {
+        return errors;
     }
 
-    public int getMistakes() {
-        return mistakes;
+    // ------------------
+    // DERIVED INSIGHTS
+    // ------------------
+
+    public long countBySeverity(ErrorSeverity severity) {
+        return errors.stream()
+                .filter(e -> e.getSeverity() == severity)
+                .count();
     }
 
-    public void setMistakes(int mistakes) {
-        this.mistakes = mistakes;
+    public Map<ErrorCategory, Long> errorsByCategory() {
+        return errors.stream()
+                .collect(Collectors.groupingBy(
+                        GameError::getCategory,
+                        Collectors.counting()
+                ));
     }
 
-    public int getBlunders() {
-        return blunders;
+    public Map<GamePhase, Long> errorsByPhase() {
+        return errors.stream()
+                .collect(Collectors.groupingBy(
+                        GameError::getPhase,
+                        Collectors.counting()
+                ));
     }
 
-    public void setBlunders(int blunders) {
-        this.blunders = blunders;
+    public Optional<ErrorCategory> weakestArea() {
+        return errorsByCategory().entrySet().stream()
+                .max(Map.Entry.comparingByValue())
+                .map(Map.Entry::getKey);
     }
-
-
 }

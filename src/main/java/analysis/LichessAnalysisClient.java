@@ -7,6 +7,7 @@ import java.net.http.HttpRequest;
 import java.net.http.HttpResponse;
 import java.net.http.HttpRequest.BodyPublishers;
 import java.nio.charset.StandardCharsets;
+import java.util.ArrayList;
 
 import org.json.JSONObject;
 
@@ -29,16 +30,14 @@ public class LichessAnalysisClient {
 
             HttpResponse<String> response = httpClient.send(request, HttpResponse.BodyHandlers.ofString());
             if (response.statusCode() == 200) {
-                // Parsing della risposta JSON
                 JSONObject json = new JSONObject(response.body());
                 int inaccuracies = json.optInt("inaccuracy", 0);
                 int mistakes = json.optInt("mistake", 0);
                 int blunders = json.optInt("blunder", 0);
-                AnalysisResult result = new AnalysisResult();
-                result.setInaccuracies(inaccuracies);
-                result.setMistakes(mistakes);
-                result.setBlunders(blunders);
-                return result;
+
+                //TODO mappare gli errori dettagliati
+
+                return new AnalysisResult(new ArrayList<>());
             } else {
                 throw new RuntimeException("Lichess API error: " + response.statusCode() + " - " + response.body());
             }
