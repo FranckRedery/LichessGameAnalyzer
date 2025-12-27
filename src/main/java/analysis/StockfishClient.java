@@ -1,11 +1,13 @@
 package analysis;
 
 import com.github.bhlangonijr.chesslib.Board;
+import com.github.bhlangonijr.chesslib.Piece;
+import com.github.bhlangonijr.chesslib.Side;
+import com.github.bhlangonijr.chesslib.move.Move;
 import domain.RawMoveEvaluation;
+import domain.enums.GamePhase;
 import net.andreinc.neatchess.client.UCI;
 import net.andreinc.neatchess.client.model.Analysis;
-import net.andreinc.neatchess.client.model.BestMove;
-import net.andreinc.neatchess.client.UCIResponse;
 import parser.PGNParser;
 
 import java.util.ArrayList;
@@ -17,7 +19,7 @@ public class StockfishClient {
 
     public void start() {
         uci = new UCI();
-        uci.startStockfish(); // 'stockfish' deve essere nel PATH o percorso assoluto
+        uci.startStockfish(); // stockfish must be in PATH environment variable
     }
 
     public void stop() {
@@ -26,62 +28,147 @@ public class StockfishClient {
         }
     }
 
-    /**
-     * Restituisce la miglior mossa in una posizione FEN
-     */
-    public BestMove getBestMove(String fen, int depth) {
-        uci.uciNewGame();
-        uci.positionFen(fen);
-        return uci.bestMove(depth).getResultOrThrow();
-    }
+    public List<RawMoveEvaluation> analyzePGN(String pgn, int depth, Side targetColor) throws Exception {
 
-    public List<RawMoveEvaluation> analyzePGN(String pgn, int depth) throws Exception {
         List<RawMoveEvaluation> evaluations = new ArrayList<>();
         uci.uciNewGame();
 
-        // Ottieni mosse UCI dal PGN
         List<String> moves = PGNParser.convertPgnToUciMoves(pgn);
+        Board board = new Board();
 
-        Board board = new Board(); // posizione iniziale
-        int moveNumber = 1;
+        int ply = 1;
 
         for (String move : moves) {
-            String fenBeforeMove = board.getFen();
-            uci.positionFen(fenBeforeMove);
 
-            // Analizza posizione prima della mossa
-            double bestMoveScore = getCentipawnFromAnalysis(uci.analysis(depth));
+            Side moveColor = board.getSideToMove();
+            boolean isTargetMove = moveColor == targetColor;
 
-            // Applica la mossa sulla Board
-            board.doMove(move);
-            String fenAfterMove = board.getFen();
-            uci.positionFen(fenAfterMove);
+            String fenBefore = board.getFen();
+            uci.positionFen(fenBefore);
+            double evalBest = extractCp(uci.analysis(depth).getResultOrThrow());
 
-            // Analizza posizione dopo la mossa
-            double actualMoveScore = getCentipawnFromAnalysis(uci.analysis(depth));
+            int legalMoves = board.legalMoves().size();
+            boolean isForced = legalMoves <= 1;
 
-            // Centipawn loss
-            double cpLoss = bestMoveScore - actualMoveScore;
+            Move chessMove = new Move(move, moveColor);
 
-            evaluations.add(new RawMoveEvaluation(moveNumber, cpLoss));
-            moveNumber++;
+            boolean isCapture = isCapture(board, chessMove);
+            boolean isPromotion = isPromotion(chessMove);
+            boolean givesCheck = givesCheck(board, chessMove);
+
+            board.doMove(chessMove);
+
+            if (!isTargetMove) {
+                ply++;
+                continue;
+            }
+
+            String fenAfter = board.getFen();
+            uci.positionFen(fenAfter);
+            double evalAfter = extractCp(uci.analysis(depth).getResultOrThrow());
+
+            int material = calculateMaterialBalance(board);
+            int relativeMaterial = (targetColor == Side.WHITE) ? material : -material;
+
+            double cpLoss = (moveColor == Side.WHITE)
+                    ? evalBest - evalAfter
+                    : evalAfter - evalBest;
+
+            double relativeCpLoss =
+                    (relativeMaterial != 0) ? cpLoss / Math.abs(relativeMaterial) : cpLoss;
+
+            GamePhase phase = determineGamePhase(board);
+
+            RawMoveEvaluation eval = new RawMoveEvaluation(
+                    moveColor,
+                    ply,
+                    move,
+                    evalBest,
+                    evalAfter,
+                    isForced,
+                    legalMoves,
+                    relativeMaterial,
+                    fenBefore,
+                    fenAfter,
+                    cpLoss,
+                    relativeCpLoss,
+                    phase,
+                    isCapture,
+                    givesCheck,
+                    isPromotion
+            );
+
+            evaluations.add(eval);
+            ply++;
         }
+
+
 
         return evaluations;
     }
 
-    /**
-     * Estrae centipawn score da UCI Analysis
-     */
-    private double getCentipawnFromAnalysis(UCIResponse<Analysis> analysisList) {
-        if (analysisList == null) return 0;
-
-        Analysis analysis = analysisList.getResultOrThrow();
-
-        if (analysis.getBestMove().getStrength().getScore() != null) {
-            return analysis.getBestMove().getStrength().getScore(); // centipawn
-        }
-        return 0;
+    private double calculateRelativeCpLoss(int relativeMaterial, double cpLoss) {
+        return (relativeMaterial != 0) ? (cpLoss / Math.abs(relativeMaterial)) : cpLoss;
     }
+
+
+    private double extractCp(Analysis analysis) {
+        if (analysis == null) return 0;
+
+        var strength = analysis.getBestMove().getStrength();
+
+        if (analysis.isMate()) {
+            return strength.getScore() > 0 ? 10_000 : -10_000;
+        }
+
+        return strength.getScore() != null ? strength.getScore() : 0;
+    }
+
+    private int calculateMaterialBalance(Board board) {
+        return
+                100 * (board.getPieceLocation(Piece.WHITE_PAWN).size()
+                        - board.getPieceLocation(Piece.BLACK_PAWN).size())
+                        + 320 * (board.getPieceLocation(Piece.WHITE_KNIGHT).size()
+                        - board.getPieceLocation(Piece.BLACK_KNIGHT).size())
+                        + 330 * (board.getPieceLocation(Piece.WHITE_BISHOP).size()
+                        - board.getPieceLocation(Piece.BLACK_BISHOP).size())
+                        + 500 * (board.getPieceLocation(Piece.WHITE_ROOK).size()
+                        - board.getPieceLocation(Piece.BLACK_ROOK).size())
+                        + 900 * (board.getPieceLocation(Piece.WHITE_QUEEN).size()
+                        - board.getPieceLocation(Piece.BLACK_QUEEN).size());
+    }
+
+    public static GamePhase determineGamePhase(Board board) {
+
+        int material =
+                9 * (board.getPieceLocation(Piece.WHITE_QUEEN).size()
+                        + board.getPieceLocation(Piece.BLACK_QUEEN).size())
+                        + 5 * (board.getPieceLocation(Piece.WHITE_ROOK).size()
+                        + board.getPieceLocation(Piece.BLACK_ROOK).size())
+                        + 3 * (board.getPieceLocation(Piece.WHITE_BISHOP).size()
+                        + board.getPieceLocation(Piece.BLACK_BISHOP).size())
+                        + 3 * (board.getPieceLocation(Piece.WHITE_KNIGHT).size()
+                        + board.getPieceLocation(Piece.BLACK_KNIGHT).size());
+
+        if (material >= 24) return GamePhase.OPENING;
+        if (material >= 12) return GamePhase.MIDDLEGAME;
+        return GamePhase.ENDGAME;
+    }
+
+    private boolean isCapture(Board board, Move move) {
+        return board.getPiece(move.getTo()) != Piece.NONE;
+    }
+
+    private boolean isPromotion(Move move) {
+        return move.getPromotion() != null;
+    }
+
+    private boolean givesCheck(Board board, Move move) {
+        Board copy = board.clone();
+        copy.doMove(move);
+        return copy.isKingAttacked();
+    }
+
+
 }
 

@@ -25,7 +25,7 @@ public class SimpleErrorClassifier implements ErrorClassifier {
 
     private ErrorSeverity classifySeverity(double cpLoss) {
         if (cpLoss < 50) return ErrorSeverity.INACCURACY;
-        if (cpLoss < 150) return ErrorSeverity.MISTAKE;
+        if (cpLoss <= 100) return ErrorSeverity.MISTAKE;
         return ErrorSeverity.BLUNDER;
     }
 
