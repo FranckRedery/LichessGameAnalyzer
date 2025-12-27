@@ -15,7 +15,7 @@ public class GameAnalyzer {
     public List<AnalysisResult> analyzeGames(List<String> pgnList) {
         List<AnalysisResult> results = new ArrayList<>();
         for (String pgn : pgnList) {
-            results.add(analysisClient.analyzeGame(pgn));
+            results.add(analysisClient.analyzeGameRaw(pgn));
         }
         return results;
     }

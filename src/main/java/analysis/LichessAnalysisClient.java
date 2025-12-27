@@ -2,6 +2,7 @@ package analysis;
 
 import domain.AnalysisResult;
 import java.net.URI;
+import java.net.URLEncoder;
 import java.net.http.HttpClient;
 import java.net.http.HttpRequest;
 import java.net.http.HttpResponse;
@@ -10,39 +11,40 @@ import java.nio.charset.StandardCharsets;
 import java.util.ArrayList;
 
 import org.json.JSONObject;
+import parser.LichessAnalysisParser;
+
 
 public class LichessAnalysisClient {
-    private static final String API_URL = "https://lichess.org/api/cloud-eval";
-    private static final String TOKEN = System.getenv("LICHESS_TOKEN");
-    private final HttpClient httpClient = HttpClient.newHttpClient();
 
-    public AnalysisResult analyzeGame(String pgn) {
+    private static final String API_URL = "https://lichess.org/api/cloud-eval";
+    private final HttpClient httpClient = HttpClient.newHttpClient();
+    private final String token;
+    private final LichessAnalysisParser lichessAnalysisParser = new LichessAnalysisParser(new SimpleErrorClassifier());
+
+    public LichessAnalysisClient(String token) {
+        this.token = token;
+    }
+
+    public AnalysisResult analyzeGameRaw(String pgn) {
         try {
-            if (TOKEN == null || TOKEN.isEmpty()) {
-                throw new RuntimeException("Lichess API token is not set in environment variables.");
-            }
             HttpRequest request = HttpRequest.newBuilder()
                     .uri(URI.create(API_URL))
-                    .header("Authorization", "Bearer " + TOKEN)
+                    .header("Authorization", "Bearer " + token)
                     .header("Content-Type", "application/x-www-form-urlencoded")
-                    .POST(BodyPublishers.ofString("pgn=" + java.net.URLEncoder.encode(pgn, StandardCharsets.UTF_8)))
+                    .POST(HttpRequest.BodyPublishers.ofString(
+                            "pgn=" + URLEncoder.encode(pgn, StandardCharsets.UTF_8)))
                     .build();
 
-            HttpResponse<String> response = httpClient.send(request, HttpResponse.BodyHandlers.ofString());
-            if (response.statusCode() == 200) {
-                JSONObject json = new JSONObject(response.body());
-                int inaccuracies = json.optInt("inaccuracy", 0);
-                int mistakes = json.optInt("mistake", 0);
-                int blunders = json.optInt("blunder", 0);
+            HttpResponse<String> response =
+                    httpClient.send(request, HttpResponse.BodyHandlers.ofString());
 
-                //TODO mappare gli errori dettagliati
-
-                return new AnalysisResult(new ArrayList<>());
-            } else {
-                throw new RuntimeException("Lichess API error: " + response.statusCode() + " - " + response.body());
+            if (response.statusCode() != 200) {
+                throw new RuntimeException("Lichess API error: " + response.body());
             }
+
+            return lichessAnalysisParser.parse(response.body());
         } catch (Exception e) {
-            throw new RuntimeException("Failed to analyze game: " + e.getMessage(), e);
+            throw new RuntimeException("Failed to call Lichess API", e);
         }
     }
 }
