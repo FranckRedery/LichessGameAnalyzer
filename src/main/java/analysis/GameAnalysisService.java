@@ -18,9 +18,8 @@ public class GameAnalysisService {
         this.errorClassifier = errorClassifier;
     }
 
-    public AnalysisResult analyzeGame(String pgn, int depth) throws Exception {
-
-        List<RawMoveEvaluation> rawEvaluations = stockfishClient.analyzePGN(pgn, depth, Side.WHITE);
+    public AnalysisResult analyzeGame(String pgn, int depth, Side playerSide) throws Exception {
+        List<RawMoveEvaluation> rawEvaluations = stockfishClient.analyzePGN(pgn, depth, playerSide);
 
         List<GameError> errors = new ArrayList<>();
         for (RawMoveEvaluation raw : rawEvaluations) {
