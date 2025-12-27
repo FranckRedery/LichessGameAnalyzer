@@ -6,21 +6,25 @@ import java.net.http.HttpClient;
 import java.net.http.HttpRequest;
 import java.net.http.HttpResponse;
 import java.net.http.HttpRequest.BodyPublishers;
+import java.nio.charset.StandardCharsets;
+
 import org.json.JSONObject;
 
 public class LichessAnalysisClient {
     private static final String API_URL = "https://lichess.org/api/cloud-eval";
-    private static final String TOKEN = "YOUR_LICHESS_TOKEN"; // Inserisci qui il tuo token personale
+    private static final String TOKEN = System.getenv("LICHESS_TOKEN");
     private final HttpClient httpClient = HttpClient.newHttpClient();
 
     public AnalysisResult analyzeGame(String pgn) {
         try {
-            // Costruisci la richiesta POST
+            if (TOKEN == null || TOKEN.isEmpty()) {
+                throw new RuntimeException("Lichess API token is not set in environment variables.");
+            }
             HttpRequest request = HttpRequest.newBuilder()
                     .uri(URI.create(API_URL))
                     .header("Authorization", "Bearer " + TOKEN)
                     .header("Content-Type", "application/x-www-form-urlencoded")
-                    .POST(BodyPublishers.ofString("pgn=" + java.net.URLEncoder.encode(pgn, java.nio.charset.StandardCharsets.UTF_8)))
+                    .POST(BodyPublishers.ofString("pgn=" + java.net.URLEncoder.encode(pgn, StandardCharsets.UTF_8)))
                     .build();
 
             HttpResponse<String> response = httpClient.send(request, HttpResponse.BodyHandlers.ofString());
