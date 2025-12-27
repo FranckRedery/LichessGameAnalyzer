@@ -4,9 +4,6 @@ import analysis.ErrorClassifier;
 import domain.AnalysisResult;
 import domain.GameError;
 import domain.RawMoveEvaluation;
-import domain.enums.ErrorCategory;
-import domain.enums.ErrorSeverity;
-import domain.enums.GamePhase;
 import org.json.JSONArray;
 import org.json.JSONObject;
 
