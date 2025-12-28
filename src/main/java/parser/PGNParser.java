@@ -1,5 +1,7 @@
 package parser;
 
+import com.fasterxml.jackson.databind.JsonNode;
+import com.fasterxml.jackson.databind.ObjectMapper;
 import com.github.bhlangonijr.chesslib.Board;
 import com.github.bhlangonijr.chesslib.Piece;
 import com.github.bhlangonijr.chesslib.Side;
@@ -20,30 +22,28 @@ public class PGNParser {
 
     public static List<LichessGame> parseNdjson(String ndjson) {
         List<LichessGame> games = new ArrayList<>();
+        ObjectMapper mapper = new ObjectMapper();
 
         for (String line : ndjson.split("\n")) {
             if (line.isBlank()) continue;
+            try {
+                JsonNode node = mapper.readTree(line);
 
-            String pgn = extractField(line, "\"pgn\":\"", "\"");
-            if (pgn == null) continue;
+                String gameId = node.get("id").asText();
+                String pgn = node.get("pgn").asText();
 
-            pgn = pgn.replace("\\n", "\n");
+                JsonNode players = node.get("players");
+                String white = players.get("white").get("user").get("name").asText();
+                String black = players.get("black").get("user").get("name").asText();
 
-            String gameId = extractField(line, "\"id\":\"", "\"");
-            String white = extractField(line, "\"white\":{\"user\":{\"name\":\"", "\"");
-            String black = extractField(line, "\"black\":{\"user\":{\"name\":\"", "\"");
+                int whiteRating = players.get("white").get("rating").asInt();
+                int blackRating = players.get("black").get("rating").asInt();
 
-            int whiteRating = extractIntField(line, "\"white\":{\"rating\":", ",");
-            int blackRating = extractIntField(line, "\"black\":{\"rating\":", ",");
-
-            games.add(new LichessGame(
-                    pgn,
-                    gameId,
-                    white,
-                    black,
-                    whiteRating,
-                    blackRating
-            ));
+                games.add(new LichessGame(pgn, gameId, white, black, whiteRating, blackRating));
+            } catch (Exception e) {
+                System.err.println("Errore parsing line: " + line);
+                e.printStackTrace();
+            }
         }
 
         return games;
