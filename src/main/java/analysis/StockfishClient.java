@@ -113,7 +113,7 @@ public class StockfishClient {
 
 
     private double extractCp(Analysis analysis) {
-        if (analysis == null) return 0;
+        if (analysis == null || analysis.getBestMove() == null) return 0;
 
         var strength = analysis.getBestMove().getStrength();
 
