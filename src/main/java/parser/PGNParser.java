@@ -108,30 +108,4 @@ public class PGNParser {
         return promotionPiece;
     }
 
-    private static String extractField(String json, String startToken, String endToken) {
-        int start = json.indexOf(startToken);
-        if (start == -1) return null;
-
-        start += startToken.length();
-        int end = json.indexOf(endToken, start);
-        if (end == -1) return null;
-
-        return json.substring(start, end);
-    }
-
-    private static int extractIntField(String json, String startToken, String endToken) {
-        try {
-            int start = json.indexOf(startToken);
-            if (start == -1) return 0;
-
-            start += startToken.length();
-            int end = json.indexOf(endToken, start);
-
-            return Integer.parseInt(json.substring(start, end));
-        } catch (Exception e) {
-            return 0;
-        }
-    }
-
-
 }

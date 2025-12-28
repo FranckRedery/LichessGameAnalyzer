@@ -40,16 +40,15 @@ public class StockfishClient {
         List<String> moves = PGNParser.convertPgnToUciMoves(game.getPgn());
         Board board = new Board();
 
-        int ply = 1;
-
         for (String move : moves) {
 
             Side moveColor = board.getSideToMove();
+            int moveNumber = board.getMoveCounter();
             boolean isTargetMove = moveColor == targetColor;
 
             String fenBefore = board.getFen();
             uci.positionFen(fenBefore);
-            double evalBest = extractCp(uci.analysis(depth).getResultOrThrow());
+            double evalBest = extractCp(uci.analysis(depth).getResultOrThrow(), moveColor, targetColor);
 
             int legalMoves = board.legalMoves().size();
             boolean isForced = legalMoves <= 1;
@@ -63,20 +62,17 @@ public class StockfishClient {
             board.doMove(chessMove);
 
             if (!isTargetMove) {
-                ply++;
                 continue;
             }
 
             String fenAfter = board.getFen();
             uci.positionFen(fenAfter);
-            double evalAfter = extractCp(uci.analysis(depth).getResultOrThrow());
+            double evalAfter = extractCp(uci.analysis(depth).getResultOrThrow(), moveColor.flip(), targetColor);
 
             int material = calculateMaterialBalance(board);
             int relativeMaterial = (targetColor == Side.WHITE) ? material : -material;
 
-            double cpLoss = (moveColor == Side.WHITE)
-                    ? evalBest - evalAfter
-                    : evalAfter - evalBest;
+            double cpLoss = (moveColor == Side.WHITE) ? evalBest - evalAfter : evalAfter - evalBest;
 
             double relativeCpLoss =
                     (relativeMaterial != 0)
@@ -88,7 +84,7 @@ public class StockfishClient {
             if(evalAfter != 0 && evalBest != 0) {
                 RawMoveEvaluation eval = new RawMoveEvaluation(
                         moveColor,
-                        ply,
+                        moveNumber,
                         move,
                         evalBest,
                         evalAfter,
@@ -108,22 +104,28 @@ public class StockfishClient {
                 evaluations.add(eval);
             }
 
-            ply++;
         }
 
         return evaluations;
     }
 
 
-    private double extractCp(Analysis analysis) {
+    private double extractCp(Analysis analysis, Side sideToMove, Side pov) {
         if (analysis == null || analysis.getBestMove() == null){
             return 0;
         }
 
         var strength = analysis.getBestMove().getStrength();
-        return strength.getScore() != null ? strength.getScore() : 0;
-
+        return strength.getScore() != null ? normalizeEval(strength.getScore() * 100, sideToMove, pov) : 0;
     }
+
+    private double normalizeEval(double eval, Side sideToMove, Side pov) {
+        if (sideToMove == pov) {
+            return eval;
+        }
+        return -eval;
+    }
+
 
     private int calculateMaterialBalance(Board board) {
         return

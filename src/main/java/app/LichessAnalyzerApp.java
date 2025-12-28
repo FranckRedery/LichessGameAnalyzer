@@ -4,6 +4,7 @@ import analysis.AdvancedErrorClassifier;
 import analysis.GameAnalysisService;
 import analysis.StockfishClient;
 import com.github.bhlangonijr.chesslib.Side;
+import domain.GameError;
 import domain.LichessGame;
 import fetch.LichessFetcher;
 
@@ -25,6 +26,7 @@ public class LichessAnalyzerApp {
 
             GameAnalysisService analysisService = new GameAnalysisService(stockfish, new AdvancedErrorClassifier());
 
+            List<GameError> allErrors = new java.util.ArrayList<>();
             for (LichessGame game : games) {
 
                 Side side = determinePlayerSide(game, USERNAME);
@@ -37,6 +39,7 @@ public class LichessAnalyzerApp {
                 var analysis = analysisService.analyzeGame(game, 17, side);
 
                 System.out.println("Game " + game.getGameId() + " | Errors found: " + analysis.getErrors());
+                allErrors.addAll(analysis.getErrors());
             }
 
         } catch (Exception e) {
