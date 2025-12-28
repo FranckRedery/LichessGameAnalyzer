@@ -4,6 +4,7 @@ import com.github.bhlangonijr.chesslib.Board;
 import com.github.bhlangonijr.chesslib.Piece;
 import com.github.bhlangonijr.chesslib.Side;
 import com.github.bhlangonijr.chesslib.move.Move;
+import domain.LichessGame;
 import domain.RawMoveEvaluation;
 import domain.enums.GamePhase;
 import net.andreinc.neatchess.client.UCI;
@@ -28,12 +29,15 @@ public class StockfishClient {
         }
     }
 
-    public List<RawMoveEvaluation> analyzePGN(String pgn, int depth, Side targetColor) throws Exception {
+    public List<RawMoveEvaluation> analyzePGN(LichessGame game, int depth, Side targetColor) throws Exception {
+        if(game == null || game.getPgn() == null || game.getPgn().isEmpty()) {
+            throw new IllegalArgumentException("Invalid game or PGN data.");
+        }
 
         List<RawMoveEvaluation> evaluations = new ArrayList<>();
         uci.uciNewGame();
 
-        List<String> moves = PGNParser.convertPgnToUciMoves(pgn);
+        List<String> moves = PGNParser.convertPgnToUciMoves(game.getPgn());
         Board board = new Board();
 
         int ply = 1;
@@ -75,7 +79,9 @@ public class StockfishClient {
                     : evalAfter - evalBest;
 
             double relativeCpLoss =
-                    (relativeMaterial != 0) ? cpLoss / Math.abs(relativeMaterial) : cpLoss;
+                    (relativeMaterial != 0)
+                            ? cpLoss / Math.abs(relativeMaterial)
+                            : cpLoss;
 
             GamePhase phase = determineGamePhase(board);
 
@@ -102,13 +108,7 @@ public class StockfishClient {
             ply++;
         }
 
-
-
         return evaluations;
-    }
-
-    private double calculateRelativeCpLoss(int relativeMaterial, double cpLoss) {
-        return (relativeMaterial != 0) ? (cpLoss / Math.abs(relativeMaterial)) : cpLoss;
     }
 
 

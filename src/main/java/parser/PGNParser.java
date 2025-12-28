@@ -6,28 +6,66 @@ import com.github.bhlangonijr.chesslib.Side;
 import com.github.bhlangonijr.chesslib.Square;
 import com.github.bhlangonijr.chesslib.move.Move;
 import com.github.bhlangonijr.chesslib.pgn.PgnHolder;
+import domain.LichessGame;
 
+import java.io.ByteArrayInputStream;
+import java.nio.charset.StandardCharsets;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.List;
 
 public class PGNParser {
 
+    public static List<LichessGame> parseNdjson(String ndjson) {
+        List<LichessGame> games = new ArrayList<>();
+
+        for (String line : ndjson.split("\n")) {
+            if (line.isBlank()) continue;
+
+            String pgn = extractField(line, "\"pgn\":\"", "\"");
+            if (pgn == null) continue;
+
+            pgn = pgn.replace("\\n", "\n");
+
+            String gameId = extractField(line, "\"id\":\"", "\"");
+            String white = extractField(line, "\"white\":{\"user\":{\"name\":\"", "\"");
+            String black = extractField(line, "\"black\":{\"user\":{\"name\":\"", "\"");
+
+            int whiteRating = extractIntField(line, "\"white\":{\"rating\":", ",");
+            int blackRating = extractIntField(line, "\"black\":{\"rating\":", ",");
+
+            games.add(new LichessGame(
+                    pgn,
+                    gameId,
+                    white,
+                    black,
+                    whiteRating,
+                    blackRating
+            ));
+        }
+
+        return games;
+    }
+
+
     public static List<String> convertPgnToUciMoves(String pgn) throws Exception {
+
         List<String> uciMoves = new ArrayList<>();
 
-        PgnHolder holder = new PgnHolder(pgn);
-        holder.loadPgn();
+        PgnHolder holder = new PgnHolder("pgnData");
+        holder.loadPgn(Arrays.toString(pgn.getBytes(StandardCharsets.UTF_8)));
 
         var game = holder.getGames().getFirst();
         Board board = new Board();
 
         for (Move move : game.getHalfMoves()) {
-            uciMoves.add(move.toString());
             board.doMove(move);
+            uciMoves.add(move.toString()); // UCI
         }
 
         return uciMoves;
     }
+
 
     public static Move convertUciToMove(String uciMove, Side sideToMove) {
         if (uciMove.length() < 4)
@@ -59,5 +97,31 @@ public class PGNParser {
         }
         return promotionPiece;
     }
+
+    private static String extractField(String json, String startToken, String endToken) {
+        int start = json.indexOf(startToken);
+        if (start == -1) return null;
+
+        start += startToken.length();
+        int end = json.indexOf(endToken, start);
+        if (end == -1) return null;
+
+        return json.substring(start, end);
+    }
+
+    private static int extractIntField(String json, String startToken, String endToken) {
+        try {
+            int start = json.indexOf(startToken);
+            if (start == -1) return 0;
+
+            start += startToken.length();
+            int end = json.indexOf(endToken, start);
+
+            return Integer.parseInt(json.substring(start, end));
+        } catch (Exception e) {
+            return 0;
+        }
+    }
+
 
 }

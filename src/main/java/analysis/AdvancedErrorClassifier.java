@@ -90,7 +90,7 @@ public class AdvancedErrorClassifier implements ErrorClassifier {
         // Fork: se la mossa attacca almeno due pezzi avversari
         if (attacksMultiplePieces(board, move.getTo(), board.getSideToMove().flip())) return true;
 
-        // TODO: aggiungere pin, scoperta, doppio attacco
+        // TODO: aggiungere altri schemi tattici come pin e attacchi scoperti
         return false;
     }
 
