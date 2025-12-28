@@ -20,7 +20,7 @@ public class LichessAnalyzerApp {
         try {
             stockfish.start();
 
-            List<LichessGame> games = fetcher.fetchGamesByUser(USERNAME, 100);
+            List<LichessGame> games = fetcher.fetchGamesByUser(USERNAME, 5);
             System.out.println("Fetched " + games.size() + " games");
 
             GameAnalysisService analysisService = new GameAnalysisService(stockfish, new AdvancedErrorClassifier());

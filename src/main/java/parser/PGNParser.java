@@ -10,6 +10,8 @@ import domain.LichessGame;
 
 import java.io.ByteArrayInputStream;
 import java.nio.charset.StandardCharsets;
+import java.nio.file.Files;
+import java.nio.file.Path;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
@@ -50,21 +52,29 @@ public class PGNParser {
 
     public static List<String> convertPgnToUciMoves(String pgn) throws Exception {
 
-        List<String> uciMoves = new ArrayList<>();
+        // 1. Crea file temporaneo
+        Path tempPgn = Files.createTempFile("lichess-game-", ".pgn");
+        Files.writeString(tempPgn, pgn, StandardCharsets.UTF_8);
 
-        PgnHolder holder = new PgnHolder("pgnData");
-        holder.loadPgn(Arrays.toString(pgn.getBytes(StandardCharsets.UTF_8)));
+        // 2. PgnHolder con filename
+        PgnHolder holder = new PgnHolder(tempPgn.toString());
+        holder.loadPgn();
 
         var game = holder.getGames().getFirst();
         Board board = new Board();
+        List<String> uciMoves = new ArrayList<>();
 
         for (Move move : game.getHalfMoves()) {
             board.doMove(move);
             uciMoves.add(move.toString()); // UCI
         }
 
+        // 3. Cleanup
+        Files.deleteIfExists(tempPgn);
+
         return uciMoves;
     }
+
 
 
     public static Move convertUciToMove(String uciMove, Side sideToMove) {
