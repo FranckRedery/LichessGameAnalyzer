@@ -8,6 +8,7 @@ import domain.RawMoveEvaluation;
 
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Objects;
 
 public class GameAnalysisService {
 
@@ -23,10 +24,7 @@ public class GameAnalysisService {
         List<RawMoveEvaluation> rawEvaluations = stockfishClient.analyzePGN(game, depth, playerSide);
 
         List<GameError> errors = new ArrayList<>();
-        for (RawMoveEvaluation raw : rawEvaluations) {
-            errors.add(advancedErrorClassifier.classify(raw));
-        }
-
+        rawEvaluations.stream().map(advancedErrorClassifier::classify).filter(Objects::nonNull).forEach(errors::add);
         return new AnalysisResult(errors);
     }
 }

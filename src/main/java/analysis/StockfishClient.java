@@ -85,26 +85,29 @@ public class StockfishClient {
 
             GamePhase phase = determineGamePhase(board);
 
-            RawMoveEvaluation eval = new RawMoveEvaluation(
-                    moveColor,
-                    ply,
-                    move,
-                    evalBest,
-                    evalAfter,
-                    isForced,
-                    legalMoves,
-                    relativeMaterial,
-                    fenBefore,
-                    fenAfter,
-                    cpLoss,
-                    relativeCpLoss,
-                    phase,
-                    isCapture,
-                    givesCheck,
-                    isPromotion
-            );
+            if(evalAfter != 0 && evalBest != 0) {
+                RawMoveEvaluation eval = new RawMoveEvaluation(
+                        moveColor,
+                        ply,
+                        move,
+                        evalBest,
+                        evalAfter,
+                        isForced,
+                        legalMoves,
+                        relativeMaterial,
+                        fenBefore,
+                        fenAfter,
+                        cpLoss,
+                        relativeCpLoss,
+                        phase,
+                        isCapture,
+                        givesCheck,
+                        isPromotion
+                );
 
-            evaluations.add(eval);
+                evaluations.add(eval);
+            }
+
             ply++;
         }
 
@@ -113,15 +116,13 @@ public class StockfishClient {
 
 
     private double extractCp(Analysis analysis) {
-        if (analysis == null || analysis.getBestMove() == null) return 0;
-
-        var strength = analysis.getBestMove().getStrength();
-
-        if (analysis.isMate()) {
-            return strength.getScore() > 0 ? 10_000 : -10_000;
+        if (analysis == null || analysis.getBestMove() == null){
+            return 0;
         }
 
+        var strength = analysis.getBestMove().getStrength();
         return strength.getScore() != null ? strength.getScore() : 0;
+
     }
 
     private int calculateMaterialBalance(Board board) {
