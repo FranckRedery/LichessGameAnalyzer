@@ -160,7 +160,7 @@ public class StockfishClient {
     }
 
     private boolean isPromotion(Move move) {
-        return move.getPromotion() != null;
+        return move.getPromotion() != null && move.getPromotion() != Piece.NONE;
     }
 
     private boolean givesCheck(Board board, Move move) {
