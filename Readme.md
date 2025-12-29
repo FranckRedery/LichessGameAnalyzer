@@ -1,13 +1,34 @@
-# LichessGameAnalyzer
+## Tips for Contributors
 
-A Java/Maven application to analyze your Lichess games, identify mistakes, and suggest areas for improvement.
+If you want to contribute to **LichessGameAnalyzer**, here are some tips to get started:
 
-## Features
+1. **Set up your environment**
+    - Install **JDK 25** (or newer).
+    - Make sure **Maven** is installed and configured.
+    - Download and set up **Stockfish** (required for game analysis).
 
-- Fetches your latest N games from Lichess using the official API
-- Analyzes mistakes made in your games
-- Provides personalized suggestions to improve your chess
+2. **Run the app locally**
+    - Clone the repository.
+    - Build the project with Maven:
+      ```bash
+      mvn clean install
+      ```
+    - Run the app on your local machine to test game analysis.
 
-## License
+3. **Common areas to improve**
+    - Fix bugs in opening recognition and centipawn calculations.
+    - Implement animated GIFs for mistakes and best continuations in the HTML report.
+    - Improve error categorization and visualization in the HTML report.
+    - Optimize performance, possibly adding multi-threading for game analysis.
 
-This project is licensed under the MIT License. See the `LICENSE` file for details.
+4. **Code contributions**
+    - Follow standard Java coding conventions.
+    - Make sure to test your changes thoroughly.
+    - Submit a pull request with a clear description of your changes.
+
+5. **Reporting issues**
+    - Open GitHub issues for bugs, feature requests, or enhancements.
+    - Provide detailed information to help reproduce the problem.
+
+6. **Have fun!**
+    - Chess analysis can be tricky, so experiment and learn while contributing.
