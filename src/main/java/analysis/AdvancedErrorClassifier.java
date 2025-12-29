@@ -1,111 +1,185 @@
 package analysis;
 
-import com.github.bhlangonijr.chesslib.Board;
-import com.github.bhlangonijr.chesslib.Square;
+import com.github.bhlangonijr.chesslib.*;
 import com.github.bhlangonijr.chesslib.move.Move;
 import domain.GameError;
 import domain.RawMoveEvaluation;
 import domain.enums.ErrorCategory;
 import domain.enums.ErrorSeverity;
 import domain.enums.GamePhase;
-import parser.PGNParser;
+
+import java.util.List;
+
+import static com.github.bhlangonijr.chesslib.PieceType.*;
 
 public class AdvancedErrorClassifier implements ErrorClassifier {
 
-    private static final double MIN_ERROR_CP = 20; // minimo centipawn per considerare un errore
     private static final double INACCURACY_THRESHOLD = 50;
-    private static final double MISTAKE_THRESHOLD = 150;
+    private static final double MISTAKE_THRESHOLD = 100;
     private static final double BLUNDER_THRESHOLD = 300;
 
     @Override
-    public GameError classify(RawMoveEvaluation rawEval) {
+    public GameError classify(RawMoveEvaluation eval) {
 
-        if (rawEval.getCentipawnLoss() < MIN_ERROR_CP) {
+        double cpLoss = eval.getCentipawnLoss();
+
+        if (cpLoss < INACCURACY_THRESHOLD) {
             return null;
         }
 
-        ErrorSeverity severity = classifySeverity(rawEval.getCentipawnLoss());
-        GamePhase phase = rawEval.getPhase();
-        ErrorCategory category = classifyCategory(rawEval, severity);
+        ErrorSeverity severity = classifySeverity(cpLoss);
+        ErrorCategory category = classifyCategory(eval, severity);
 
         return new GameError(
                 severity,
                 category,
-                phase,
-                rawEval.getMoveNumber(),
-                rawEval.getCentipawnLoss()
+                eval.getPhase(),
+                eval.getMoveNumber(),
+                cpLoss
         );
     }
 
     private ErrorSeverity classifySeverity(double cpLoss) {
-        if (cpLoss < INACCURACY_THRESHOLD) return ErrorSeverity.INACCURACY;
-        if (cpLoss <= MISTAKE_THRESHOLD) return ErrorSeverity.MISTAKE;
+        if (cpLoss < MISTAKE_THRESHOLD) return ErrorSeverity.INACCURACY;
+        if (cpLoss < BLUNDER_THRESHOLD) return ErrorSeverity.MISTAKE;
         return ErrorSeverity.BLUNDER;
     }
 
     private ErrorCategory classifyCategory(RawMoveEvaluation eval, ErrorSeverity severity) {
 
-        if (eval.getPhase() == GamePhase.OPENING) {
+        if (eval.getPhase() == GamePhase.OPENING &&
+                eval.isInOpeningTheory() &&
+                eval.getMoveNumber() <= 12) {
             return ErrorCategory.OPENING_KNOWLEDGE;
         }
 
-        // 2. Endgame
-        if (eval.getPhase() == GamePhase.ENDGAME && Math.abs(eval.getMaterialBalance()) < 1000) {
-            return ErrorCategory.ENDGAME_TECHNIQUE;
-        }
-
-        // 3. Tattico avanzato
-        if (eval.isCapture() || eval.isCheck() || eval.isPromotion() || hasTacticalPattern(eval)) {
+        if (isTacticalError(eval)) {
             return ErrorCategory.TACTICAL;
         }
 
-        // 4. Distinzione tra strategico e positional
-        if (severity == ErrorSeverity.MISTAKE || severity == ErrorSeverity.BLUNDER) {
-            if (Math.abs(eval.getMaterialBalance()) < 500) {
-                return ErrorCategory.STRATEGIC;
-            } else {
-                return ErrorCategory.POSITIONAL;
-            }
+        if (eval.getPhase() == GamePhase.ENDGAME &&
+                Math.abs(eval.getMaterialBalance()) <= 500) {
+            return ErrorCategory.ENDGAME_TECHNIQUE;
         }
 
-        // Default
-        return ErrorCategory.STRATEGIC;
+        if (severity != ErrorSeverity.INACCURACY) {
+            if (Math.abs(eval.getMaterialBalance()) < 300) {
+                return ErrorCategory.STRATEGIC;
+            }
+            return ErrorCategory.POSITIONAL;
+        }
+
+        return ErrorCategory.POSITIONAL;
     }
 
-    /**
-     * Riconosce schemi tattici basici (fork, pin, discovered attack)
-     * Possiamo espandere con pattern più avanzati
-     */
+    /* =======================
+       TACTICAL ANALYSIS
+       ======================= */
+
+    private boolean isTacticalError(RawMoveEvaluation eval) {
+
+        if (eval.getCentipawnLoss() < 100) return false;
+
+        if (eval.isCapture() || eval.isCheck() || eval.isPromotion()) {
+            return true;
+        }
+
+        if (Math.abs(eval.getEvalBefore() - eval.getEvalAfter()) >= 150 &&
+                Math.abs(eval.getMaterialBalance()) >= 200) {
+            return true;
+        }
+
+        return hasTacticalPattern(eval);
+    }
+
     private boolean hasTacticalPattern(RawMoveEvaluation eval) {
+
         Board board = new Board();
-        board.loadFromFen(eval.getFenBefore());
+        board.loadFromFen(eval.getFenAfter());
 
-        // Ottieni la mossa UCI
-        Move move = PGNParser.convertUciToMove(eval.getUciMove(), eval.getPlayerColor());
-        board.doMove(move);
+        Side attacker = board.getSideToMove();
+        Side victim = attacker.flip();
 
-        // Fork: se la mossa attacca almeno due pezzi avversari
-        if (attacksMultiplePieces(board, move.getTo(), board.getSideToMove().flip())) return true;
+        return hasHangingPiece(board, victim) ||
+                hasFork(board, attacker) ||
+                hasStrongPin(board, attacker) ||
+                isPositionCollapsed(eval);
+    }
 
-        // TODO: aggiungere altri schemi tattici come pin e attacchi scoperti
+    private boolean hasHangingPiece(Board board, Side victim) {
+
+        for (Square sq : Square.values()) {
+            Piece piece = board.getPiece(sq);
+            if (piece == Piece.NONE || piece.getPieceSide() != victim) continue;
+
+            int attackers = Long.bitCount(board.squareAttackedBy(sq, board.getSideToMove()));
+            int defenders = Long.bitCount(board.squareAttackedBy(sq, victim));
+
+            if (attackers > defenders && materialValue(piece.getPieceType())  >= 300) {
+                return true;
+            }
+        }
         return false;
     }
 
-    /**
-     * Conta quanti pezzi avversari sono minacciati da un quadrato
-     */
-    private boolean attacksMultiplePieces(Board board, com.github.bhlangonijr.chesslib.Square from, com.github.bhlangonijr.chesslib.Side opponent) {
-        int attacked = 0;
+    private boolean hasFork(Board board, Side attacker) {
 
-        for (com.github.bhlangonijr.chesslib.Square sq : com.github.bhlangonijr.chesslib.Square.values()) {
-            if (board.getPiece(sq).getPieceSide() == opponent) {
-                if (board.isMoveLegal(new com.github.bhlangonijr.chesslib.move.Move(from, sq), true)) {
-                    attacked++;
+        for (Move move : board.legalMoves()) {
+            Board copy = board.clone();
+            copy.doMove(move);
+
+            int valuableTargets = 0;
+
+            for (Square sq : Square.values()) {
+                Piece p = copy.getPiece(sq);
+                if (p == Piece.NONE) continue;
+                if (p.getPieceSide() == attacker) continue;
+                if (p.getPieceType() == PieceType.KING) continue;
+
+                int value = materialValue(p.getPieceType());
+                if (value >= 500 &&
+                        copy.isSquareAttackedBy(List.of(sq), attacker)) {
+                    valuableTargets++;
                 }
             }
+
+            if (valuableTargets >= 2) return true;
         }
-        return attacked >= 2;
+        return false;
     }
 
+
+    private boolean hasStrongPin(Board board, Side attacker) {
+
+        for (Square sq : Square.values()) {
+            Piece p = board.getPiece(sq);
+            if (p == Piece.NONE) continue;
+            if (p.getPieceSide() != attacker.flip()) continue;
+
+            int value = materialValue(p.getPieceType());
+            if (value < 300) continue;
+
+            if (board.isSquareAttackedBy(List.of(sq), attacker)) {
+                return true;
+            }
+        }
+        return false;
+    }
+
+
+    private boolean isPositionCollapsed(RawMoveEvaluation eval) {
+        return eval.getLegalMovesCount() <= 3 &&
+                eval.getCentipawnLoss() >= 150;
+    }
+
+    private static int materialValue(PieceType type) {
+        return switch (type) {
+            case PAWN -> 100;
+            case KNIGHT, BISHOP -> 300;
+            case ROOK -> 500;
+            case QUEEN -> 900;
+            default -> 0;
+        };
+    }
 
 }

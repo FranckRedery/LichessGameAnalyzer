@@ -24,12 +24,15 @@ public class RawMoveEvaluation {
     private final boolean capture;
     private final boolean check;
     private final boolean promotion;
+    private final boolean isInOpeningTheory;
 
     private final String fenBefore;
     private final String fenAfter;
 
 
-    public RawMoveEvaluation(Side playerColor, int moveNumber, String uciMove, double evalBefore, double evalAfter, boolean forced, int legalMovesCount, int materialBalance, String fenBefore, String fenAfter, double cpLoss, double relativeCpLoss ,GamePhase phase, boolean capture, boolean check, boolean promotion) {
+
+
+    public RawMoveEvaluation(Side playerColor, int moveNumber, String uciMove, double evalBefore, double evalAfter, boolean forced, int legalMovesCount, int materialBalance, String fenBefore, String fenAfter, double cpLoss, double relativeCpLoss , GamePhase phase, boolean capture, boolean check, boolean promotion, boolean isInOpeningTheory) {
         this.playerColor = playerColor;
         this.moveNumber = moveNumber;
         this.uciMove = uciMove;
@@ -46,6 +49,11 @@ public class RawMoveEvaluation {
         this.capture = capture;
         this.check = check;
         this.promotion = promotion;
+        this.isInOpeningTheory = isInOpeningTheory;
+    }
+
+    public boolean isInOpeningTheory() {
+        return isInOpeningTheory;
     }
 
     public boolean isCapture() {

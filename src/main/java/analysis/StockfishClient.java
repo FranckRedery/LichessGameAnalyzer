@@ -100,7 +100,8 @@ public class StockfishClient {
                         phase,
                         isCapture,
                         givesCheck,
-                        isPromotion
+                        isPromotion,
+                        openingExplorer.isInOpeningTheory(fenBefore)
                 );
 
                 evaluations.add(eval);
