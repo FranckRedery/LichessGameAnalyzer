@@ -37,7 +37,7 @@ If you want to contribute to **LichessGameAnalyzer**, here are some tips to get 
 
 Here are some screenshots of the analysis results:
 
-![Screenshot 1](resources/img_2.png)
-![Screenshot 2](resources/img_1.png)
-![Screenshot 3](resources/img.png)
+![Screenshot 1](src/main/resources/img_2.png)
+![Screenshot 2](src/main/resources/img_1.png)
+![Screenshot 3](src/main/resources/img.png)
 
