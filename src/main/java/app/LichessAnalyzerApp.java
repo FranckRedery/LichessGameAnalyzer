@@ -42,6 +42,9 @@ public class LichessAnalyzerApp {
                 allErrors.addAll(analysis.getErrors());
             }
 
+            GameErrorReportGenerator reportGenerator = new GameErrorReportGenerator(allErrors);
+            reportGenerator.generateAndOpenHtmlReport();
+
         } catch (Exception e) {
             e.printStackTrace();
         } finally {

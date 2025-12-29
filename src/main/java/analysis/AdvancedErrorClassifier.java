@@ -10,7 +10,6 @@ import domain.enums.GamePhase;
 
 import java.util.List;
 
-import static com.github.bhlangonijr.chesslib.PieceType.*;
 
 public class AdvancedErrorClassifier implements ErrorClassifier {
 
@@ -29,14 +28,7 @@ public class AdvancedErrorClassifier implements ErrorClassifier {
 
         ErrorSeverity severity = classifySeverity(cpLoss);
         ErrorCategory category = classifyCategory(eval, severity);
-
-        return new GameError(
-                severity,
-                category,
-                eval.getPhase(),
-                eval.getMoveNumber(),
-                cpLoss
-        );
+        return GameError.from(eval, severity, category);
     }
 
     private ErrorSeverity classifySeverity(double cpLoss) {

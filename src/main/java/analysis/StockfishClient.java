@@ -5,6 +5,7 @@ import com.github.bhlangonijr.chesslib.Piece;
 import com.github.bhlangonijr.chesslib.Side;
 import com.github.bhlangonijr.chesslib.move.Move;
 import domain.LichessGame;
+import domain.OpeningResponse;
 import domain.RawMoveEvaluation;
 import domain.enums.GamePhase;
 import fetch.LichessOpeningExplorer;
@@ -14,6 +15,7 @@ import parser.PGNParser;
 
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Optional;
 
 public class StockfishClient {
 
@@ -35,82 +37,143 @@ public class StockfishClient {
     }
 
     public List<RawMoveEvaluation> analyzePGN(LichessGame game, int depth, Side targetColor) throws Exception {
-        if(game == null || game.getPgn() == null || game.getPgn().isEmpty()) {
+
+        if (game == null || game.getPgn() == null || game.getPgn().isEmpty()) {
             throw new IllegalArgumentException("Invalid game or PGN data.");
         }
 
+        String gameId = game.getGameId();
         List<RawMoveEvaluation> evaluations = new ArrayList<>();
+
         uci.uciNewGame();
 
         List<String> moves = PGNParser.convertPgnToUciMoves(game.getPgn());
         Board board = new Board();
 
-        for (String move : moves) {
+        for (String uciMove : moves) {
 
             Side moveColor = board.getSideToMove();
             int moveNumber = board.getMoveCounter();
-            boolean isTargetMove = moveColor == targetColor;
 
             String fenBefore = board.getFen();
+
+        /* ==========================
+           ENGINE EVAL BEFORE MOVE
+           ========================== */
             uci.positionFen(fenBefore);
-            double evalBest = extractCp(uci.analysis(depth).getResultOrThrow(), moveColor, targetColor);
+            Analysis analysisBefore = uci.analysis(depth).getResultOrThrow();
 
-            int legalMoves = board.legalMoves().size();
-            boolean isForced = legalMoves <= 1;
+            double evalBest = extractCp(analysisBefore, moveColor, targetColor);
 
-            Move chessMove = new Move(move, moveColor);
+            String bestMoveUci = null;
+            if (analysisBefore.getBestMove() != null) {
+                bestMoveUci = analysisBefore.getBestMove().getLan();
+            }
+            int legalMovesCount = board.legalMoves().size();
+            boolean forced = legalMovesCount <= 1;
+
+        /* ==========================
+           MOVE METADATA
+           ========================== */
+            Move chessMove = new Move(uciMove, moveColor);
 
             boolean isCapture = isCapture(board, chessMove);
             boolean isPromotion = isPromotion(chessMove);
             boolean givesCheck = givesCheck(board, chessMove);
 
+            int materialBefore = calculateMaterialBalance(board);
+
+        /* ==========================
+           APPLY MOVE
+           ========================== */
             board.doMove(chessMove);
 
-            if (!isTargetMove) {
+            if (moveColor != targetColor) {
                 continue;
             }
 
             String fenAfter = board.getFen();
+
+        /* ==========================
+           ENGINE EVAL AFTER MOVE
+           ========================== */
             uci.positionFen(fenAfter);
-            double evalAfter = extractCp(uci.analysis(depth).getResultOrThrow(), moveColor.flip(), targetColor);
+            Analysis analysisAfter = uci.analysis(depth).getResultOrThrow();
 
-            int material = calculateMaterialBalance(board);
-            int relativeMaterial = (targetColor == Side.WHITE) ? material : -material;
+            double evalAfter = extractCp(analysisAfter, board.getSideToMove(), targetColor);
 
-            double cpLoss = (moveColor == Side.WHITE) ? evalBest - evalAfter : evalAfter - evalBest;
+        /* ==========================
+           MATERIAL & CP LOSS
+           ========================== */
+            int materialAfter = calculateMaterialBalance(board);
+            int materialDelta = materialAfter - materialBefore;
 
-            double relativeCpLoss = (relativeMaterial != 0) ? cpLoss / Math.abs(relativeMaterial) : cpLoss;
+            int relativeMaterial = targetColor == Side.WHITE ? materialAfter : -materialAfter;
 
-            GamePhase phase = determineGamePhase(board, moveNumber);
+            double cpLoss = moveColor == Side.WHITE ? evalBest - evalAfter : evalAfter - evalBest;
 
-            if(evalAfter != 0 && evalBest != 0) {
-                RawMoveEvaluation eval = new RawMoveEvaluation(
-                        moveColor,
-                        moveNumber,
-                        move,
-                        evalBest,
-                        evalAfter,
-                        isForced,
-                        legalMoves,
-                        relativeMaterial,
-                        fenBefore,
-                        fenAfter,
-                        cpLoss,
-                        relativeCpLoss,
-                        phase,
-                        isCapture,
-                        givesCheck,
-                        isPromotion,
-                        openingExplorer.isInOpeningTheory(fenBefore)
-                );
+            double relativeCpLoss = relativeMaterial != 0 ? cpLoss / Math.abs(relativeMaterial) : cpLoss;
 
-                evaluations.add(eval);
-            }
+        /* ==========================
+           OPENING INFO
+           ========================== */
+            Optional<OpeningResponse> opening = openingExplorer.getOpeningFromFen(fenBefore);
 
+            boolean inOpeningTheory = opening.isPresent();
+            String openingName = opening.map(o -> o.name).orElse(null);
+            String openingEco = opening.map(o -> o.eco).orElse(null);
+
+        /* ==========================
+           GAME PHASE
+           ========================== */
+            GamePhase phase = inOpeningTheory ? GamePhase.OPENING : determineGamePhase(board, moveNumber);
+
+        /* ==========================
+           SAN & MATE THREAT
+           ========================== */
+            String sanMove = chessMove.toString();  // CORRETTO
+
+            boolean createsMateThreat = Math.abs(evalAfter) > 9000 && Math.abs(evalBest) < 9000;
+
+        /* ==========================
+           BUILD EVALUATION
+           ========================== */
+            RawMoveEvaluation evaluation = new RawMoveEvaluation(
+                    gameId,
+                    moveColor,
+                    moveNumber,
+                    uciMove,
+                    sanMove,
+                    evalBest,
+                    evalAfter,
+                    evalBest,
+                    bestMoveUci,
+                    forced,
+                    legalMovesCount,
+                    relativeMaterial,
+                    materialDelta,
+                    fenBefore,
+                    fenAfter,
+                    cpLoss,
+                    relativeCpLoss,
+                    phase,
+                    board.getSideToMove(),
+                    isCapture,
+                    givesCheck,
+                    isPromotion,
+                    createsMateThreat,
+                    inOpeningTheory,
+                    openingName,
+                    openingEco
+            );
+
+            evaluations.add(evaluation);
         }
 
         return evaluations;
     }
+
+
 
 
     private double extractCp(Analysis analysis, Side sideToMove, Side pov) {
@@ -151,14 +214,6 @@ public class StockfishClient {
         }
 
         if (moveNumber <= MIN_OPENING_MOVES) {
-            return GamePhase.OPENING;
-        }
-
-        if (moveNumber > MAX_OPENING_MOVES) {
-            return GamePhase.MIDDLEGAME;
-        }
-
-        if (openingExplorer.isInOpeningTheory(board.getFen())) {
             return GamePhase.OPENING;
         }
 
