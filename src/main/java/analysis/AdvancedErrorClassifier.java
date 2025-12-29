@@ -20,7 +20,6 @@ public class AdvancedErrorClassifier implements ErrorClassifier {
     @Override
     public GameError classify(RawMoveEvaluation rawEval) {
 
-        // Scarta mosse con perdita CP troppo bassa
         if (rawEval.getCentipawnLoss() < MIN_ERROR_CP) {
             return null;
         }
@@ -46,14 +45,12 @@ public class AdvancedErrorClassifier implements ErrorClassifier {
 
     private ErrorCategory classifyCategory(RawMoveEvaluation eval, ErrorSeverity severity) {
 
-        // 1. Apertura
         if (eval.getPhase() == GamePhase.OPENING) {
             return ErrorCategory.OPENING_KNOWLEDGE;
         }
 
         // 2. Endgame
-        if ((eval.getPhase() == GamePhase.ENDGAME || eval.getPhase() == GamePhase.MIDDLEGAME)
-                && Math.abs(eval.getMaterialBalance()) < 1000) {
+        if (eval.getPhase() == GamePhase.ENDGAME && Math.abs(eval.getMaterialBalance()) < 1000) {
             return ErrorCategory.ENDGAME_TECHNIQUE;
         }
 

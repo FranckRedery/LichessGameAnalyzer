@@ -7,6 +7,7 @@ import com.github.bhlangonijr.chesslib.move.Move;
 import domain.LichessGame;
 import domain.RawMoveEvaluation;
 import domain.enums.GamePhase;
+import fetch.LichessOpeningExplorer;
 import net.andreinc.neatchess.client.UCI;
 import net.andreinc.neatchess.client.model.Analysis;
 import parser.PGNParser;
@@ -17,6 +18,10 @@ import java.util.List;
 public class StockfishClient {
 
     private UCI uci;
+    private final LichessOpeningExplorer openingExplorer = new LichessOpeningExplorer();
+    private static final int MIN_OPENING_MOVES = 6;
+    private static final int MAX_OPENING_MOVES = 16;
+
 
     public void start() {
         uci = new UCI();
@@ -74,12 +79,9 @@ public class StockfishClient {
 
             double cpLoss = (moveColor == Side.WHITE) ? evalBest - evalAfter : evalAfter - evalBest;
 
-            double relativeCpLoss =
-                    (relativeMaterial != 0)
-                            ? cpLoss / Math.abs(relativeMaterial)
-                            : cpLoss;
+            double relativeCpLoss = (relativeMaterial != 0) ? cpLoss / Math.abs(relativeMaterial) : cpLoss;
 
-            GamePhase phase = determineGamePhase(board);
+            GamePhase phase = determineGamePhase(board, moveNumber);
 
             if(evalAfter != 0 && evalBest != 0) {
                 RawMoveEvaluation eval = new RawMoveEvaluation(
@@ -141,22 +143,43 @@ public class StockfishClient {
                         - board.getPieceLocation(Piece.BLACK_QUEEN).size());
     }
 
-    public static GamePhase determineGamePhase(Board board) {
+    public GamePhase determineGamePhase(Board board, int moveNumber) {
 
-        int material =
-                9 * (board.getPieceLocation(Piece.WHITE_QUEEN).size()
-                        + board.getPieceLocation(Piece.BLACK_QUEEN).size())
-                        + 5 * (board.getPieceLocation(Piece.WHITE_ROOK).size()
-                        + board.getPieceLocation(Piece.BLACK_ROOK).size())
-                        + 3 * (board.getPieceLocation(Piece.WHITE_BISHOP).size()
-                        + board.getPieceLocation(Piece.BLACK_BISHOP).size())
-                        + 3 * (board.getPieceLocation(Piece.WHITE_KNIGHT).size()
-                        + board.getPieceLocation(Piece.BLACK_KNIGHT).size());
+        if (isEndgame(board)) {
+            return GamePhase.ENDGAME;
+        }
 
-        if (material >= 24) return GamePhase.OPENING;
-        if (material >= 12) return GamePhase.MIDDLEGAME;
-        return GamePhase.ENDGAME;
+        if (moveNumber <= MIN_OPENING_MOVES) {
+            return GamePhase.OPENING;
+        }
+
+        if (moveNumber > MAX_OPENING_MOVES) {
+            return GamePhase.MIDDLEGAME;
+        }
+
+        if (openingExplorer.isInOpeningTheory(board.getFen())) {
+            return GamePhase.OPENING;
+        }
+
+        return GamePhase.MIDDLEGAME;
     }
+
+
+    private boolean isEndgame(Board board) {
+        int majorMinor =
+                board.getPieceLocation(Piece.WHITE_QUEEN).size()
+                        + board.getPieceLocation(Piece.BLACK_QUEEN).size()
+                        + board.getPieceLocation(Piece.WHITE_ROOK).size()
+                        + board.getPieceLocation(Piece.BLACK_ROOK).size()
+                        + board.getPieceLocation(Piece.WHITE_BISHOP).size()
+                        + board.getPieceLocation(Piece.BLACK_BISHOP).size()
+                        + board.getPieceLocation(Piece.WHITE_KNIGHT).size()
+                        + board.getPieceLocation(Piece.BLACK_KNIGHT).size();
+
+        return majorMinor <= 6;
+    }
+
+
 
     private boolean isCapture(Board board, Move move) {
         return board.getPiece(move.getTo()) != Piece.NONE;

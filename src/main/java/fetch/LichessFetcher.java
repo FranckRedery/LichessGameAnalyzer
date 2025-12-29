@@ -16,6 +16,7 @@ public class LichessFetcher {
     private final HttpClient httpClient;
     private final String BASE_URL = "https://lichess.org/api/games/user/";
 
+
     public LichessFetcher() {
         this.httpClient = HttpClient.newHttpClient();
     }
