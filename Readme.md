@@ -3,7 +3,7 @@
 If you want to contribute to **LichessGameAnalyzer**, here are some tips to get started:
 
 1. **Set up your environment**
-    - Install **JDK 25** (or newer).
+    - Install **JDK 25**.
     - Make sure **Maven** is installed and configured.
     - Download and set up **Stockfish** (required for game analysis).
 
