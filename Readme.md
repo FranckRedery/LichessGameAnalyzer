@@ -32,3 +32,12 @@ If you want to contribute to **LichessGameAnalyzer**, here are some tips to get 
 
 6. **Have fun!**
     - Chess analysis can be tricky, so experiment and learn while contributing.
+
+## Example Output
+
+Here are some screenshots of the analysis results:
+
+![Screenshot 1](resources/screenshots/screenshot1.png)
+![Screenshot 2](resources/screenshots/screenshot2.png)
+![Screenshot 3](resources/screenshots/screenshot3.png)
+
