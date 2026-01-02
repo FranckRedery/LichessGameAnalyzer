@@ -17,9 +17,8 @@ If you want to contribute to **LichessGameAnalyzer**, here are some tips to get 
 
 3. **Common areas to improve**
     - Fix bugs in centipawn calculations. (sometimes the cp loss is infinity, which is incorrect)
-    - Implement animated GIFs for mistakes and best continuations in the HTML report.
     - Improve error categorization and visualization in the HTML report.
-    - Optimize performance, possibly adding multi-threading for game analysis.
+    - Optimize performance
 
 4. **Code contributions**
     - Follow standard Java coding conventions.
@@ -37,7 +36,7 @@ If you want to contribute to **LichessGameAnalyzer**, here are some tips to get 
 
 Here are some screenshots of the analysis results:
 
-![Screenshot 1](src/main/resources/img_3.png)
-![Screenshot 2](src/main/resources/img_4.png)
-![Screenshot 3](src/main/resources/img_5.png)
+![Screenshot 1](src/main/resources/img_2.png)
+![Screenshot 2](src/main/resources/img_1.png)
+![Screenshot 3](src/main/resources/img.png)
 

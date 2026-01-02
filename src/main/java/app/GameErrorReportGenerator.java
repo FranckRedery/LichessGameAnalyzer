@@ -10,6 +10,7 @@ import java.awt.Desktop;
 import java.io.File;
 import java.io.FileWriter;
 import java.io.IOException;
+import java.net.URLEncoder;
 import java.util.*;
 import java.util.stream.Collectors;
 
@@ -58,7 +59,7 @@ public class GameErrorReportGenerator {
 
         html.append("    <div class='container'>\n");
         html.append("        <header>\n");
-        html.append("            <h1>♟️ Chess Analysis Report</h1>\n");
+        html.append("            <h1>&#9823; Chess Analysis Report</h1>\n");
         html.append("            <p class='subtitle'>Analisi dettagliata degli errori nelle partite</p>\n");
         html.append("        </header>\n");
 
@@ -78,262 +79,63 @@ public class GameErrorReportGenerator {
     }
 
     private String getStyles() {
-        return """
-            * {
-                margin: 0;
-                padding: 0;
-                box-sizing: border-box;
-            }
-            
-            body {
-                font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, sans-serif;
-                background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-                color: #333;
-                padding: 20px;
-                line-height: 1.6;
-            }
-            
-            .container {
-                max-width: 1400px;
-                margin: 0 auto;
-                background: white;
-                border-radius: 20px;
-                box-shadow: 0 20px 60px rgba(0,0,0,0.3);
-                overflow: hidden;
-            }
-            
-            header {
-                background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-                color: white;
-                padding: 40px;
-                text-align: center;
-            }
-            
-            header h1 {
-                font-size: 2.5em;
-                margin-bottom: 10px;
-                font-weight: 700;
-            }
-            
-            .subtitle {
-                font-size: 1.2em;
-                opacity: 0.95;
-            }
-            
-            .summary {
-                display: grid;
-                grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
-                gap: 20px;
-                padding: 40px;
-                background: #f8f9fa;
-            }
-            
-            .summary-card {
-                background: white;
-                padding: 25px;
-                border-radius: 15px;
-                box-shadow: 0 4px 15px rgba(0,0,0,0.1);
-                text-align: center;
-                transition: transform 0.3s ease, box-shadow 0.3s ease;
-            }
-            
-            .summary-card:hover {
-                transform: translateY(-5px);
-                box-shadow: 0 8px 25px rgba(0,0,0,0.15);
-            }
-            
-            .summary-card .number {
-                font-size: 3em;
-                font-weight: 700;
-                color: #667eea;
-                margin: 10px 0;
-            }
-            
-            .summary-card .label {
-                font-size: 1em;
-                color: #666;
-                text-transform: uppercase;
-                letter-spacing: 1px;
-            }
-            
-            .charts-section {
-                padding: 40px;
-            }
-            
-            .charts-grid {
-                display: grid;
-                grid-template-columns: repeat(auto-fit, minmax(450px, 1fr));
-                gap: 30px;
-                margin-top: 20px;
-            }
-            
-            .chart-container {
-                background: white;
-                padding: 30px;
-                border-radius: 15px;
-                box-shadow: 0 4px 15px rgba(0,0,0,0.1);
-            }
-            
-            .chart-container h3 {
-                color: #667eea;
-                margin-bottom: 20px;
-                font-size: 1.3em;
-                text-align: center;
-            }
-            
-            .chart-wrapper {
-                position: relative;
-                height: 300px;
-            }
-            
-            .stats-section {
-                padding: 40px;
-                background: #f8f9fa;
-            }
-            
-            .stats-grid {
-                display: grid;
-                grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
-                gap: 20px;
-                margin-top: 20px;
-            }
-            
-            .stat-card {
-                background: white;
-                padding: 20px;
-                border-radius: 10px;
-                box-shadow: 0 2px 10px rgba(0,0,0,0.1);
-            }
-            
-            .stat-card h4 {
-                color: #667eea;
-                margin-bottom: 15px;
-                font-size: 1.1em;
-            }
-            
-            .stat-item {
-                display: flex;
-                justify-content: space-between;
-                padding: 10px 0;
-                border-bottom: 1px solid #eee;
-            }
-            
-            .stat-item:last-child {
-                border-bottom: none;
-            }
-            
-            .stat-label {
-                font-weight: 500;
-                color: #555;
-            }
-            
-            .stat-value {
-                font-weight: 700;
-                color: #667eea;
-            }
-            
-            .errors-table-section {
-                padding: 40px;
-            }
-            
-            .errors-table-section h2 {
-                color: #667eea;
-                margin-bottom: 20px;
-                font-size: 1.8em;
-            }
-            
-            .error-card {
-                background: white;
-                border-radius: 10px;
-                box-shadow: 0 2px 10px rgba(0,0,0,0.1);
-                margin-bottom: 20px;
-                overflow: hidden;
-                transition: transform 0.2s ease;
-            }
-            
-            .error-card:hover {
-                transform: translateX(5px);
-                box-shadow: 0 4px 20px rgba(0,0,0,0.15);
-            }
-            
-            .error-header {
-                background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-                color: white;
-                padding: 15px 20px;
-                display: flex;
-                justify-content: space-between;
-                align-items: center;
-                flex-wrap: wrap;
-                gap: 10px;
-            }
-            
-            .error-body {
-                padding: 20px;
-                display: grid;
-                grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
-                gap: 15px;
-            }
-            
-            .error-info {
-                display: flex;
-                flex-direction: column;
-            }
-            
-            .error-info-label {
-                font-size: 0.85em;
-                color: #666;
-                text-transform: uppercase;
-                letter-spacing: 0.5px;
-                margin-bottom: 5px;
-            }
-            
-            .error-info-value {
-                font-weight: 600;
-                color: #333;
-            }
-            
-            .severity-badge {
-                padding: 5px 15px;
-                border-radius: 20px;
-                font-weight: 600;
-                font-size: 0.9em;
-            }
-            
-            .severity-BLUNDER {
-                background: #ff4444;
-                color: white;
-            }
-            
-            .severity-MISTAKE {
-                background: #ff9800;
-                color: white;
-            }
-            
-            .severity-INACCURACY {
-                background: #ffc107;
-                color: #333;
-            }
-            
-            section h2 {
-                color: #667eea;
-                margin-bottom: 20px;
-                font-size: 1.8em;
-            }
-            
-            @media (max-width: 768px) {
-                .charts-grid {
-                    grid-template-columns: 1fr;
-                }
-                
-                .summary {
-                    grid-template-columns: 1fr;
-                }
-                
-                header h1 {
-                    font-size: 2em;
-                }
-            }
-        """;
+        StringBuilder css = new StringBuilder();
+        css.append("* { margin: 0; padding: 0; box-sizing: border-box; }\n");
+        css.append("body { font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, sans-serif; ");
+        css.append("background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); color: #333; padding: 20px; line-height: 1.6; }\n");
+        css.append(".container { max-width: 1400px; margin: 0 auto; background: white; border-radius: 20px; ");
+        css.append("box-shadow: 0 20px 60px rgba(0,0,0,0.3); overflow: hidden; }\n");
+        css.append("header { background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); color: white; padding: 40px; text-align: center; }\n");
+        css.append("header h1 { font-size: 2.5em; margin-bottom: 10px; font-weight: 700; }\n");
+        css.append(".subtitle { font-size: 1.2em; opacity: 0.95; }\n");
+        css.append(".summary { display: grid; grid-template-columns: repeat(auto-fit, minmax(250px, 1fr)); gap: 20px; padding: 40px; background: #f8f9fa; }\n");
+        css.append(".summary-card { background: white; padding: 25px; border-radius: 15px; box-shadow: 0 4px 15px rgba(0,0,0,0.1); text-align: center; ");
+        css.append("transition: transform 0.3s ease, box-shadow 0.3s ease; }\n");
+        css.append(".summary-card:hover { transform: translateY(-5px); box-shadow: 0 8px 25px rgba(0,0,0,0.15); }\n");
+        css.append(".summary-card .number { font-size: 3em; font-weight: 700; color: #667eea; margin: 10px 0; }\n");
+        css.append(".summary-card .label { font-size: 1em; color: #666; text-transform: uppercase; letter-spacing: 1px; }\n");
+        css.append(".charts-section { padding: 40px; }\n");
+        css.append(".charts-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(450px, 1fr)); gap: 30px; margin-top: 20px; }\n");
+        css.append(".chart-container { background: white; padding: 30px; border-radius: 15px; box-shadow: 0 4px 15px rgba(0,0,0,0.1); }\n");
+        css.append(".chart-container h3 { color: #667eea; margin-bottom: 20px; font-size: 1.3em; text-align: center; }\n");
+        css.append(".chart-wrapper { position: relative; height: 300px; }\n");
+        css.append(".stats-section { padding: 40px; background: #f8f9fa; }\n");
+        css.append(".stats-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(300px, 1fr)); gap: 20px; margin-top: 20px; }\n");
+        css.append(".stat-card { background: white; padding: 20px; border-radius: 10px; box-shadow: 0 2px 10px rgba(0,0,0,0.1); }\n");
+        css.append(".stat-card h4 { color: #667eea; margin-bottom: 15px; font-size: 1.1em; }\n");
+        css.append(".stat-item { display: flex; justify-content: space-between; padding: 10px 0; border-bottom: 1px solid #eee; }\n");
+        css.append(".stat-item:last-child { border-bottom: none; }\n");
+        css.append(".stat-label { font-weight: 500; color: #555; }\n");
+        css.append(".stat-value { font-weight: 700; color: #667eea; }\n");
+        css.append(".errors-table-section { padding: 40px; }\n");
+        css.append(".errors-table-section h2 { color: #667eea; margin-bottom: 20px; font-size: 1.8em; }\n");
+        css.append(".error-card { background: white; border-radius: 10px; box-shadow: 0 2px 10px rgba(0,0,0,0.1); margin-bottom: 20px; ");
+        css.append("overflow: hidden; transition: transform 0.2s ease; }\n");
+        css.append(".error-card:hover { transform: translateX(5px); box-shadow: 0 4px 20px rgba(0,0,0,0.15); }\n");
+        css.append(".error-header { background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); color: white; padding: 15px 20px; ");
+        css.append("display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 10px; }\n");
+        css.append(".error-body { padding: 20px; display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 15px; }\n");
+        css.append(".error-info { display: flex; flex-direction: column; }\n");
+        css.append(".error-info-label { font-size: 0.85em; color: #666; text-transform: uppercase; letter-spacing: 0.5px; margin-bottom: 5px; }\n");
+        css.append(".error-info-value { font-weight: 600; color: #333; }\n");
+        css.append(".chess-animations { grid-column: 1 / -1; display: grid; grid-template-columns: 1fr 1fr; gap: 20px; margin-top: 20px; ");
+        css.append("padding-top: 20px; border-top: 2px solid #eee; }\n");
+        css.append(".animation-container { display: flex; flex-direction: column; align-items: center; background: #f8f9fa; ");
+        css.append("padding: 15px; border-radius: 10px; }\n");
+        css.append(".animation-title { font-weight: 700; color: #667eea; margin-bottom: 10px; font-size: 1.1em; text-align: center; }\n");
+        css.append(".chess-board-gif { width: 100%; max-width: 400px; height: auto; border-radius: 8px; ");
+        css.append("box-shadow: 0 4px 10px rgba(0,0,0,0.2); background: #fff; }\n");
+        css.append(".move-notation { margin-top: 10px; font-family: 'Courier New', monospace; font-size: 0.95em; color: #555; text-align: center; }\n");
+        css.append(".severity-badge { padding: 5px 15px; border-radius: 20px; font-weight: 600; font-size: 0.9em; }\n");
+        css.append(".severity-BLUNDER { background: #ff4444; color: white; }\n");
+        css.append(".severity-MISTAKE { background: #ff9800; color: white; }\n");
+        css.append(".severity-INACCURACY { background: #ffc107; color: #333; }\n");
+        css.append("section h2 { color: #667eea; margin-bottom: 20px; font-size: 1.8em; }\n");
+        css.append("@media (max-width: 768px) { .charts-grid { grid-template-columns: 1fr; } ");
+        css.append(".summary { grid-template-columns: 1fr; } header h1 { font-size: 2em; } ");
+        css.append(".chess-animations { grid-template-columns: 1fr; } }\n");
+
+        return css.toString();
     }
 
     private String generateSummarySection() {
@@ -354,30 +156,12 @@ public class GameErrorReportGenerator {
 
         StringBuilder html = new StringBuilder();
         html.append("        <section class='summary'>\n");
-        html.append("            <div class='summary-card'>\n");
-        html.append("                <div class='number'>").append(totalErrors).append("</div>\n");
-        html.append("                <div class='label'>Errori Totali</div>\n");
-        html.append("            </div>\n");
-        html.append("            <div class='summary-card'>\n");
-        html.append("                <div class='number'>").append(blunders).append("</div>\n");
-        html.append("                <div class='label'>Blunder</div>\n");
-        html.append("            </div>\n");
-        html.append("            <div class='summary-card'>\n");
-        html.append("                <div class='number'>").append(mistakes).append("</div>\n");
-        html.append("                <div class='label'>Mistakes</div>\n");
-        html.append("            </div>\n");
-        html.append("            <div class='summary-card'>\n");
-        html.append("                <div class='number'>").append(inaccuracies).append("</div>\n");
-        html.append("                <div class='label'>Inaccuracies</div>\n");
-        html.append("            </div>\n");
-        html.append("            <div class='summary-card'>\n");
-        html.append("                <div class='number'>").append(String.format("%.0f", avgCentipawnLoss)).append("</div>\n");
-        html.append("                <div class='label'>CP Loss Medio</div>\n");
-        html.append("            </div>\n");
-        html.append("            <div class='summary-card'>\n");
-        html.append("                <div class='number'>").append(uniqueGames).append("</div>\n");
-        html.append("                <div class='label'>Partite Analizzate</div>\n");
-        html.append("            </div>\n");
+        html.append("            <div class='summary-card'><div class='number'>").append(totalErrors).append("</div><div class='label'>Errori Totali</div></div>\n");
+        html.append("            <div class='summary-card'><div class='number'>").append(blunders).append("</div><div class='label'>Blunder</div></div>\n");
+        html.append("            <div class='summary-card'><div class='number'>").append(mistakes).append("</div><div class='label'>Mistakes</div></div>\n");
+        html.append("            <div class='summary-card'><div class='number'>").append(inaccuracies).append("</div><div class='label'>Inaccuracies</div></div>\n");
+        html.append("            <div class='summary-card'><div class='number'>").append(String.format("%.0f", avgCentipawnLoss)).append("</div><div class='label'>CP Loss Medio</div></div>\n");
+        html.append("            <div class='summary-card'><div class='number'>").append(uniqueGames).append("</div><div class='label'>Partite Analizzate</div></div>\n");
         html.append("        </section>\n");
 
         return html.toString();
@@ -386,37 +170,12 @@ public class GameErrorReportGenerator {
     private String generateChartsSection() {
         StringBuilder html = new StringBuilder();
         html.append("        <section class='charts-section'>\n");
-        html.append("            <h2>📊 Analisi Visuale</h2>\n");
+        html.append("            <h2>&#128202; Analisi Visuale</h2>\n");
         html.append("            <div class='charts-grid'>\n");
-
-        html.append("                <div class='chart-container'>\n");
-        html.append("                    <h3>Errori per Fase di Gioco</h3>\n");
-        html.append("                    <div class='chart-wrapper'>\n");
-        html.append("                        <canvas id='phaseChart'></canvas>\n");
-        html.append("                    </div>\n");
-        html.append("                </div>\n");
-
-        html.append("                <div class='chart-container'>\n");
-        html.append("                    <h3>Errori per Categoria</h3>\n");
-        html.append("                    <div class='chart-wrapper'>\n");
-        html.append("                        <canvas id='categoryChart'></canvas>\n");
-        html.append("                    </div>\n");
-        html.append("                </div>\n");
-
-        html.append("                <div class='chart-container'>\n");
-        html.append("                    <h3>Distribuzione Gravità</h3>\n");
-        html.append("                    <div class='chart-wrapper'>\n");
-        html.append("                        <canvas id='severityChart'></canvas>\n");
-        html.append("                    </div>\n");
-        html.append("                </div>\n");
-
-        html.append("                <div class='chart-container'>\n");
-        html.append("                    <h3>CP Loss per Gravità</h3>\n");
-        html.append("                    <div class='chart-wrapper'>\n");
-        html.append("                        <canvas id='cpLossChart'></canvas>\n");
-        html.append("                    </div>\n");
-        html.append("                </div>\n");
-
+        html.append("                <div class='chart-container'><h3>Errori per Fase di Gioco</h3><div class='chart-wrapper'><canvas id='phaseChart'></canvas></div></div>\n");
+        html.append("                <div class='chart-container'><h3>Errori per Categoria</h3><div class='chart-wrapper'><canvas id='categoryChart'></canvas></div></div>\n");
+        html.append("                <div class='chart-container'><h3>Distribuzione Gravita</h3><div class='chart-wrapper'><canvas id='severityChart'></canvas></div></div>\n");
+        html.append("                <div class='chart-container'><h3>CP Loss per Gravita</h3><div class='chart-wrapper'><canvas id='cpLossChart'></canvas></div></div>\n");
         html.append("            </div>\n");
         html.append("        </section>\n");
 
@@ -426,13 +185,11 @@ public class GameErrorReportGenerator {
     private String generateStatisticsSection() {
         StringBuilder html = new StringBuilder();
         html.append("        <section class='stats-section'>\n");
-        html.append("            <h2>📈 Statistiche Dettagliate</h2>\n");
+        html.append("            <h2>&#128200; Statistiche Dettagliate</h2>\n");
         html.append("            <div class='stats-grid'>\n");
-
         html.append(generatePhaseStatistics());
         html.append(generateCategoryStatistics());
         html.append(generateColorStatistics());
-
         html.append("            </div>\n");
         html.append("        </section>\n");
 
@@ -445,14 +202,14 @@ public class GameErrorReportGenerator {
 
         StringBuilder html = new StringBuilder();
         html.append("                <div class='stat-card'>\n");
-        html.append("                    <h4>🎯 Errori per Fase</h4>\n");
+        html.append("                    <h4>&#127919; Errori per Fase</h4>\n");
 
         for (GamePhase phase : GamePhase.values()) {
             long count = phaseCount.getOrDefault(phase, 0L);
-            html.append("                    <div class='stat-item'>\n");
-            html.append("                        <span class='stat-label'>").append(phase.name()).append("</span>\n");
-            html.append("                        <span class='stat-value'>").append(count).append("</span>\n");
-            html.append("                    </div>\n");
+            html.append("                    <div class='stat-item'>");
+            html.append("<span class='stat-label'>").append(phase.name()).append("</span>");
+            html.append("<span class='stat-value'>").append(count).append("</span>");
+            html.append("</div>\n");
         }
 
         html.append("                </div>\n");
@@ -465,15 +222,15 @@ public class GameErrorReportGenerator {
 
         StringBuilder html = new StringBuilder();
         html.append("                <div class='stat-card'>\n");
-        html.append("                    <h4>🔍 Errori per Categoria</h4>\n");
+        html.append("                    <h4>&#128269; Errori per Categoria</h4>\n");
 
         for (ErrorCategory category : ErrorCategory.values()) {
             long count = categoryCount.getOrDefault(category, 0L);
             if (count > 0) {
-                html.append("                    <div class='stat-item'>\n");
-                html.append("                        <span class='stat-label'>").append(category.name().replace("_", " ")).append("</span>\n");
-                html.append("                        <span class='stat-value'>").append(count).append("</span>\n");
-                html.append("                    </div>\n");
+                html.append("                    <div class='stat-item'>");
+                html.append("<span class='stat-label'>").append(category.name().replace("_", " ")).append("</span>");
+                html.append("<span class='stat-value'>").append(count).append("</span>");
+                html.append("</div>\n");
             }
         }
 
@@ -493,21 +250,21 @@ public class GameErrorReportGenerator {
 
         StringBuilder html = new StringBuilder();
         html.append("                <div class='stat-card'>\n");
-        html.append("                    <h4>⚫⚪ Statistiche per Colore</h4>\n");
+        html.append("                    <h4>&#9899;&#9898; Statistiche per Colore</h4>\n");
 
         for (Side side : Side.values()) {
             if (side == Side.WHITE || side == Side.BLACK) {
                 long count = colorCount.getOrDefault(side, 0L);
                 double avgLoss = avgCpLoss.getOrDefault(side, 0.0);
 
-                html.append("                    <div class='stat-item'>\n");
-                html.append("                        <span class='stat-label'>").append(side.name()).append(" - Errori</span>\n");
-                html.append("                        <span class='stat-value'>").append(count).append("</span>\n");
-                html.append("                    </div>\n");
-                html.append("                    <div class='stat-item'>\n");
-                html.append("                        <span class='stat-label'>").append(side.name()).append(" - CP Loss Medio</span>\n");
-                html.append("                        <span class='stat-value'>").append(String.format("%.1f", avgLoss)).append("</span>\n");
-                html.append("                    </div>\n");
+                html.append("                    <div class='stat-item'>");
+                html.append("<span class='stat-label'>").append(side.name()).append(" - Errori</span>");
+                html.append("<span class='stat-value'>").append(count).append("</span>");
+                html.append("</div>\n");
+                html.append("                    <div class='stat-item'>");
+                html.append("<span class='stat-label'>").append(side.name()).append(" - CP Loss Medio</span>");
+                html.append("<span class='stat-value'>").append(String.format("%.1f", avgLoss)).append("</span>");
+                html.append("</div>\n");
             }
         }
 
@@ -518,7 +275,7 @@ public class GameErrorReportGenerator {
     private String generateErrorsTableSection() {
         StringBuilder html = new StringBuilder();
         html.append("        <section class='errors-table-section'>\n");
-        html.append("            <h2>🔍 Dettaglio Errori</h2>\n");
+        html.append("            <h2>&#128269; Dettaglio Errori</h2>\n");
 
         List<GameError> sortedErrors = errors.stream()
                 .sorted(Comparator.comparingDouble(GameError::centipawnLoss).reversed())
@@ -527,55 +284,40 @@ public class GameErrorReportGenerator {
         for (GameError error : sortedErrors) {
             html.append("            <div class='error-card'>\n");
             html.append("                <div class='error-header'>\n");
-            html.append("                    <div>\n");
-            html.append("                        <strong>Mossa ").append(error.moveNumber()).append("</strong> - ");
+            html.append("                    <div><strong>Mossa ").append(error.moveNumber()).append("</strong> - ");
             html.append(error.playerColor().name()).append(" | ");
-            html.append(error.openingName() != null ? error.openingName() : "Unknown Opening");
-            html.append("                    </div>\n");
+            html.append(error.openingName() != null ? escapeHtml(error.openingName()) : "Unknown Opening");
+            html.append("</div>\n");
             html.append("                    <span class='severity-badge severity-").append(error.severity().name()).append("'>");
             html.append(error.severity().name()).append("</span>\n");
             html.append("                </div>\n");
             html.append("                <div class='error-body'>\n");
 
-            html.append("                    <div class='error-info'>\n");
-            html.append("                        <span class='error-info-label'>Fase</span>\n");
-            html.append("                        <span class='error-info-value'>").append(error.phase().name()).append("</span>\n");
-            html.append("                    </div>\n");
+            html.append("                    <div class='error-info'><span class='error-info-label'>Fase</span>");
+            html.append("<span class='error-info-value'>").append(error.phase().name()).append("</span></div>\n");
 
-            html.append("                    <div class='error-info'>\n");
-            html.append("                        <span class='error-info-label'>Categoria</span>\n");
-            html.append("                        <span class='error-info-value'>").append(error.category().name().replace("_", " ")).append("</span>\n");
-            html.append("                    </div>\n");
+            html.append("                    <div class='error-info'><span class='error-info-label'>Categoria</span>");
+            html.append("<span class='error-info-value'>").append(error.category().name().replace("_", " ")).append("</span></div>\n");
 
-            html.append("                    <div class='error-info'>\n");
-            html.append("                        <span class='error-info-label'>CP Loss</span>\n");
-            html.append("                        <span class='error-info-value'>").append(String.format("%.0f", error.centipawnLoss())).append("</span>\n");
-            html.append("                    </div>\n");
+            html.append("                    <div class='error-info'><span class='error-info-label'>CP Loss</span>");
+            html.append("<span class='error-info-value'>").append(String.format("%.0f", error.centipawnLoss())).append("</span></div>\n");
 
-            html.append("                    <div class='error-info'>\n");
-            html.append("                        <span class='error-info-label'>Mossa Giocata</span>\n");
-            html.append("                        <span class='error-info-value'>").append(error.playedMoveSan()).append("</span>\n");
-            html.append("                    </div>\n");
+            html.append("                    <div class='error-info'><span class='error-info-label'>Mossa Giocata</span>");
+            html.append("<span class='error-info-value'>").append(escapeHtml(error.playedMoveSan())).append("</span></div>\n");
 
-            html.append("                    <div class='error-info'>\n");
-            html.append("                        <span class='error-info-label'>Mossa Migliore</span>\n");
-            html.append("                        <span class='error-info-value'>").append(error.bestMoveUci()).append("</span>\n");
-            html.append("                    </div>\n");
+            html.append("                    <div class='error-info'><span class='error-info-label'>Mossa Migliore</span>");
+            html.append("<span class='error-info-value'>").append(escapeHtml(error.bestMoveUci())).append("</span></div>\n");
 
-            html.append("                    <div class='error-info'>\n");
-            html.append("                        <span class='error-info-label'>Eval Prima</span>\n");
-            html.append("                        <span class='error-info-value'>").append(String.format("%.2f", error.evalBefore())).append("</span>\n");
-            html.append("                    </div>\n");
+            html.append("                    <div class='error-info'><span class='error-info-label'>Eval Prima</span>");
+            html.append("<span class='error-info-value'>").append(String.format("%.2f", error.evalBefore())).append("</span></div>\n");
 
-            html.append("                    <div class='error-info'>\n");
-            html.append("                        <span class='error-info-label'>Eval Dopo</span>\n");
-            html.append("                        <span class='error-info-value'>").append(String.format("%.2f", error.evalAfter())).append("</span>\n");
-            html.append("                    </div>\n");
+            html.append("                    <div class='error-info'><span class='error-info-label'>Eval Dopo</span>");
+            html.append("<span class='error-info-value'>").append(String.format("%.2f", error.evalAfter())).append("</span></div>\n");
 
-            html.append("                    <div class='error-info'>\n");
-            html.append("                        <span class='error-info-label'>Game ID</span>\n");
-            html.append("                        <span class='error-info-value'>").append(error.gameId()).append("</span>\n");
-            html.append("                    </div>\n");
+            html.append("                    <div class='error-info'><span class='error-info-label'>Game ID</span>");
+            html.append("<span class='error-info-value'>").append(escapeHtml(error.gameId())).append("</span></div>\n");
+
+            html.append(generateChessAnimations(error));
 
             html.append("                </div>\n");
             html.append("            </div>\n");
@@ -583,6 +325,70 @@ public class GameErrorReportGenerator {
 
         html.append("        </section>\n");
         return html.toString();
+    }
+
+    private String generateChessAnimations(GameError error) {
+        StringBuilder html = new StringBuilder();
+
+        html.append("                    <div class='chess-animations'>\n");
+
+        String playedMoveGif = generateLichessGifUrl(
+                error.fenBefore(),
+                error.playedMoveUci(),
+                error.playerColor().name().toLowerCase()
+        );
+
+        html.append("                        <div class='animation-container'>\n");
+        html.append("                            <div class='animation-title'>&#10060; Mossa Giocata (Errore)</div>\n");
+        html.append("                            <img src='").append(playedMoveGif).append("' ");
+        html.append("alt='Mossa giocata' class='chess-board-gif' loading='lazy'>\n");
+        html.append("                            <div class='move-notation'>Mossa: <strong>");
+        html.append(escapeHtml(error.playedMoveSan())).append("</strong> (");
+        html.append(escapeHtml(error.playedMoveUci())).append(")</div>\n");
+        html.append("                        </div>\n");
+
+        String bestMoveGif = generateLichessGifUrl(
+                error.fenBefore(),
+                error.bestMoveUci(),
+                error.playerColor().name().toLowerCase()
+        );
+
+        html.append("                        <div class='animation-container'>\n");
+        html.append("                            <div class='animation-title'>&#9989; Mossa Migliore</div>\n");
+        html.append("                            <img src='").append(bestMoveGif).append("' ");
+        html.append("alt='Mossa migliore' class='chess-board-gif' loading='lazy'>\n");
+        html.append("                            <div class='move-notation'>Mossa: <strong>");
+        html.append(escapeHtml(error.bestMoveUci())).append("</strong> (CP Loss evitata: ");
+        html.append(String.format("%.0f", error.centipawnLoss())).append(")</div>\n");
+        html.append("                        </div>\n");
+
+        html.append("                    </div>\n");
+
+        return html.toString();
+    }
+
+    private String generateLichessGifUrl(String fen, String move, String orientation) {
+        try {
+            String encodedFen = URLEncoder.encode(fen, "UTF-8");
+            return String.format(
+                    "https://lichess1.org/export/fen.gif?fen=%s&lastMove=%s&orientation=%s&theme=brown&piece=cburnett",
+                    encodedFen,
+                    move,
+                    orientation
+            );
+        } catch (Exception e) {
+            e.printStackTrace();
+            return "https://via.placeholder.com/400x400.png?text=Errore+caricamento+GIF";
+        }
+    }
+
+    private String escapeHtml(String text) {
+        if (text == null) return "";
+        return text.replace("&", "&amp;")
+                .replace("<", "&lt;")
+                .replace(">", "&gt;")
+                .replace("\"", "&quot;")
+                .replace("'", "&#39;");
     }
 
     private String getChartScripts() {
@@ -601,147 +407,68 @@ public class GameErrorReportGenerator {
                         Collectors.averagingDouble(GameError::centipawnLoss)
                 ));
 
-        return String.format("""
-            Chart.defaults.font.family = '-apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif';
-            Chart.defaults.plugins.legend.display = true;
-            Chart.defaults.plugins.legend.position = 'bottom';
-            
-            const phaseCtx = document.getElementById('phaseChart').getContext('2d');
-            new Chart(phaseCtx, {
-                type: 'pie',
-                data: {
-                    labels: %s,
-                    datasets: [{
-                        data: %s,
-                        backgroundColor: [
-                            'rgba(102, 126, 234, 0.8)',
-                            'rgba(118, 75, 162, 0.8)',
-                            'rgba(255, 152, 0, 0.8)'
-                        ],
-                        borderWidth: 2,
-                        borderColor: '#fff'
-                    }]
-                },
-                options: {
-                    responsive: true,
-                    maintainAspectRatio: false,
-                    plugins: {
-                        legend: {
-                            position: 'bottom',
-                            labels: { padding: 15, font: { size: 12 } }
-                        }
-                    }
-                }
-            });
-            
-            const categoryCtx = document.getElementById('categoryChart').getContext('2d');
-            new Chart(categoryCtx, {
-                type: 'doughnut',
-                data: {
-                    labels: %s,
-                    datasets: [{
-                        data: %s,
-                        backgroundColor: [
-                            'rgba(255, 99, 132, 0.8)',
-                            'rgba(54, 162, 235, 0.8)',
-                            'rgba(255, 206, 86, 0.8)',
-                            'rgba(75, 192, 192, 0.8)',
-                            'rgba(153, 102, 255, 0.8)',
-                            'rgba(255, 159, 64, 0.8)',
-                            'rgba(199, 199, 199, 0.8)'
-                        ],
-                        borderWidth: 2,
-                        borderColor: '#fff'
-                    }]
-                },
-                options: {
-                    responsive: true,
-                    maintainAspectRatio: false,
-                    plugins: {
-                        legend: {
-                            position: 'bottom',
-                            labels: { padding: 10, font: { size: 11 } }
-                        }
-                    }
-                }
-            });
-            
-            const severityCtx = document.getElementById('severityChart').getContext('2d');
-            new Chart(severityCtx, {
-                type: 'bar',
-                data: {
-                    labels: %s,
-                    datasets: [{
-                        label: 'Numero di Errori',
-                        data: %s,
-                        backgroundColor: [
-                            'rgba(255, 68, 68, 0.8)',
-                            'rgba(255, 152, 0, 0.8)',
-                            'rgba(255, 193, 7, 0.8)'
-                        ],
-                        borderWidth: 2,
-                        borderColor: [
-                            'rgb(255, 68, 68)',
-                            'rgb(255, 152, 0)',
-                            'rgb(255, 193, 7)'
-                        ]
-                    }]
-                },
-                options: {
-                    responsive: true,
-                    maintainAspectRatio: false,
-                    scales: {
-                        y: {
-                            beginAtZero: true,
-                            ticks: { stepSize: 1 }
-                        }
-                    },
-                    plugins: {
-                        legend: { display: false }
-                    }
-                }
-            });
-            
-            const cpLossCtx = document.getElementById('cpLossChart').getContext('2d');
-            new Chart(cpLossCtx, {
-                type: 'bar',
-                data: {
-                    labels: %s,
-                    datasets: [{
-                        label: 'CP Loss Medio',
-                        data: %s,
-                        backgroundColor: 'rgba(102, 126, 234, 0.8)',
-                        borderColor: 'rgb(102, 126, 234)',
-                        borderWidth: 2
-                    }]
-                },
-                options: {
-                    responsive: true,
-                    maintainAspectRatio: false,
-                    scales: {
-                        y: {
-                            beginAtZero: true,
-                            title: {
-                                display: true,
-                                text: 'Centipawn Loss'
-                            }
-                        }
-                    },
-                    plugins: {
-                        legend: { display: false }
-                    }
-                }
-            });
-        """,
-                toJsonArray(phaseData.keySet().stream().map(Enum::name).collect(Collectors.toList())),
-                toJsonArray(phaseData.values()),
-                toJsonArray(categoryData.keySet().stream().map(c -> c.name().replace("_", " ")).collect(Collectors.toList())),
-                toJsonArray(categoryData.values()),
-                toJsonArray(severityData.keySet().stream().map(Enum::name).collect(Collectors.toList())),
-                toJsonArray(severityData.values()),
-                toJsonArray(cpLossData.keySet().stream().map(Enum::name).collect(Collectors.toList())),
-                toJsonArray(cpLossData.values())
-        );
+        StringBuilder js = new StringBuilder();
+        js.append("Chart.defaults.font.family = '-apple-system, BlinkMacSystemFont, \"Segoe UI\", Roboto, sans-serif';\n");
+        js.append("Chart.defaults.plugins.legend.display = true;\n");
+        js.append("Chart.defaults.plugins.legend.position = 'bottom';\n\n");
+
+        js.append("const phaseCtx = document.getElementById('phaseChart').getContext('2d');\n");
+        js.append("new Chart(phaseCtx, {\n");
+        js.append("    type: 'pie',\n");
+        js.append("    data: {\n");
+        js.append("        labels: ").append(toJsonArray(phaseData.keySet().stream().map(Enum::name).collect(Collectors.toList()))).append(",\n");
+        js.append("        datasets: [{ data: ").append(toJsonArray(phaseData.values())).append(",\n");
+        js.append("            backgroundColor: ['rgba(102,126,234,0.8)','rgba(118,75,162,0.8)','rgba(255,152,0,0.8)'],\n");
+        js.append("            borderWidth: 2, borderColor: '#fff' }]\n");
+        js.append("    },\n");
+        js.append("    options: { responsive: true, maintainAspectRatio: false,\n");
+        js.append("        plugins: { legend: { position: 'bottom', labels: { padding: 15, font: { size: 12 } } } } }\n");
+        js.append("});\n\n");
+
+        js.append("const categoryCtx = document.getElementById('categoryChart').getContext('2d');\n");
+        js.append("new Chart(categoryCtx, {\n");
+        js.append("    type: 'doughnut',\n");
+        js.append("    data: {\n");
+        js.append("        labels: ").append(toJsonArray(categoryData.keySet().stream().map(c -> c.name().replace("_"," ")).collect(Collectors.toList()))).append(",\n");
+        js.append("        datasets: [{ data: ").append(toJsonArray(categoryData.values())).append(",\n");
+        js.append("            backgroundColor: ['rgba(255,99,132,0.8)','rgba(54,162,235,0.8)','rgba(255,206,86,0.8)',\n");
+        js.append("                'rgba(75,192,192,0.8)','rgba(153,102,255,0.8)','rgba(255,159,64,0.8)','rgba(199,199,199,0.8)'],\n");
+        js.append("            borderWidth: 2, borderColor: '#fff' }]\n");
+        js.append("    },\n");
+        js.append("    options: { responsive: true, maintainAspectRatio: false,\n");
+        js.append("        plugins: { legend: { position: 'bottom', labels: { padding: 10, font: { size: 11 } } } } }\n");
+        js.append("});\n\n");
+
+        js.append("const severityCtx = document.getElementById('severityChart').getContext('2d');\n");
+        js.append("new Chart(severityCtx, {\n");
+        js.append("    type: 'bar',\n");
+        js.append("    data: {\n");
+        js.append("        labels: ").append(toJsonArray(severityData.keySet().stream().map(Enum::name).collect(Collectors.toList()))).append(",\n");
+        js.append("        datasets: [{ label: 'Numero di Errori', data: ").append(toJsonArray(severityData.values())).append(",\n");
+        js.append("            backgroundColor: ['rgba(255,68,68,0.8)','rgba(255,152,0,0.8)','rgba(255,193,7,0.8)'],\n");
+        js.append("            borderWidth: 2,\n");
+        js.append("            borderColor: ['rgb(255,68,68)','rgb(255,152,0)','rgb(255,193,7)'] }]\n");
+        js.append("    },\n");
+        js.append("    options: { responsive: true, maintainAspectRatio: false,\n");
+        js.append("        scales: { y: { beginAtZero: true, ticks: { stepSize: 1 } } },\n");
+        js.append("        plugins: { legend: { display: false } } }\n");
+        js.append("});\n\n");
+
+        js.append("const cpLossCtx = document.getElementById('cpLossChart').getContext('2d');\n");
+        js.append("new Chart(cpLossCtx, {\n");
+        js.append("    type: 'bar',\n");
+        js.append("    data: {\n");
+        js.append("        labels: ").append(toJsonArray(cpLossData.keySet().stream().map(Enum::name).collect(Collectors.toList()))).append(",\n");
+        js.append("        datasets: [{ label: 'CP Loss Medio', data: ").append(toJsonArray(cpLossData.values())).append(",\n");
+        js.append("            backgroundColor: 'rgba(102,126,234,0.8)',\n");
+        js.append("            borderColor: 'rgb(102,126,234)', borderWidth: 2 }]\n");
+        js.append("    },\n");
+        js.append("    options: { responsive: true, maintainAspectRatio: false,\n");
+        js.append("        scales: { y: { beginAtZero: true, title: { display: true, text: 'Centipawn Loss' } } },\n");
+        js.append("        plugins: { legend: { display: false } } }\n");
+        js.append("});\n");
+
+        return js.toString();
     }
 
     private String toJsonArray(Collection<?> collection) {
@@ -752,6 +479,6 @@ public class GameErrorReportGenerator {
                     }
                     return String.valueOf(item);
                 })
-    .collect(Collectors.joining(", ")) + "]";}
-
+                .collect(Collectors.joining(",")) + "]";
+    }
 }

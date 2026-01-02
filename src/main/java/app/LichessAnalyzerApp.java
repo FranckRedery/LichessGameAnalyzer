@@ -23,7 +23,7 @@ public class LichessAnalyzerApp {
         LichessFetcher fetcher = new LichessFetcher();
 
         try {
-            List<LichessGame> games = fetcher.fetchGamesByUser(USERNAME, 50);
+            List<LichessGame> games = fetcher.fetchGamesByUser(USERNAME, 10);
             System.out.println("Fetched " + games.size() + " games");
 
             List<GameError> allErrors = new ArrayList<>();
@@ -67,8 +67,7 @@ public class LichessAnalyzerApp {
 
             executor.shutdown();
 
-            GameErrorReportGenerator reportGenerator =
-                    new GameErrorReportGenerator(allErrors);
+            GameErrorReportGenerator reportGenerator = new GameErrorReportGenerator(allErrors);
             reportGenerator.generateAndOpenHtmlReport();
 
         } catch (Exception e) {
