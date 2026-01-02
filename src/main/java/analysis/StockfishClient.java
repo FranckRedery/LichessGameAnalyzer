@@ -49,6 +49,8 @@ public class StockfishClient {
 
         List<String> moves = PGNParser.convertPgnToUciMoves(game.pgn());
         Board board = new Board();
+        String openingName = null;
+        String openingEco = null;
 
         for (String uciMove : moves) {
 
@@ -120,8 +122,11 @@ public class StockfishClient {
             Optional<OpeningResponse> opening = openingExplorer.getOpeningFromFen(fenBefore);
 
             boolean inOpeningTheory = opening.isPresent();
-            String openingName = opening.map(OpeningResponse::name).orElse(null);
-            String openingEco = opening.map(OpeningResponse::eco).orElse(null);
+            if(openingName == null && opening.isPresent()){
+                var openingInfo = opening.get().opening();
+                openingName = openingInfo.name();
+                openingEco = openingInfo.eco();
+            }
 
         /* ==========================
            GAME PHASE

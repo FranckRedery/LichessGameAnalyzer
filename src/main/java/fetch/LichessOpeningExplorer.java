@@ -13,7 +13,7 @@ import java.util.Optional;
 
 public class LichessOpeningExplorer {
 
-    private static final String OPENING_URL = "https://lichess.org/api/opening";
+    private static final String OPENING_URL = "https://explorer.lichess.ovh/masters";
 
     private final HttpClient httpClient = HttpClient.newHttpClient();
     private final ObjectMapper mapper = new ObjectMapper();
@@ -38,7 +38,7 @@ public class LichessOpeningExplorer {
 
             OpeningResponse opening = mapper.readValue(response.body(), OpeningResponse.class);
 
-            return opening.name() != null ? Optional.of(opening) : Optional.empty();
+            return opening.opening() != null ? Optional.of(opening) : Optional.empty();
 
         } catch (Exception e) {
             return Optional.empty();

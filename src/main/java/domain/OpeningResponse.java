@@ -1,5 +1,5 @@
 package domain;
 
-public record OpeningResponse(String eco, String name, String moves) {
+public record OpeningResponse(OpeningInfo opening, Integer white, Integer draws, Integer black, Object[] moves, Object[] topGames) {
 
 }
