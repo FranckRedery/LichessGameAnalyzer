@@ -20,7 +20,7 @@ public class AdvancedErrorClassifier implements ErrorClassifier {
     @Override
     public GameError classify(RawMoveEvaluation eval) {
 
-        double cpLoss = eval.getCentipawnLoss();
+        double cpLoss = eval.cpLoss();
 
         if (cpLoss < INACCURACY_THRESHOLD) {
             return null;
@@ -39,9 +39,9 @@ public class AdvancedErrorClassifier implements ErrorClassifier {
 
     private ErrorCategory classifyCategory(RawMoveEvaluation eval, ErrorSeverity severity) {
 
-        if (eval.getPhase() == GamePhase.OPENING &&
-                eval.isInOpeningTheory() &&
-                eval.getMoveNumber() <= 12) {
+        if (eval.phase() == GamePhase.OPENING &&
+                eval.inOpeningTheory() &&
+                eval.moveNumber() <= 12) {
             return ErrorCategory.OPENING_KNOWLEDGE;
         }
 
@@ -49,13 +49,13 @@ public class AdvancedErrorClassifier implements ErrorClassifier {
             return ErrorCategory.TACTICAL;
         }
 
-        if (eval.getPhase() == GamePhase.ENDGAME &&
-                Math.abs(eval.getMaterialBalance()) <= 500) {
+        if (eval.phase() == GamePhase.ENDGAME &&
+                Math.abs(eval.materialBalance()) <= 500) {
             return ErrorCategory.ENDGAME_TECHNIQUE;
         }
 
         if (severity != ErrorSeverity.INACCURACY) {
-            if (Math.abs(eval.getMaterialBalance()) < 300) {
+            if (Math.abs(eval.materialBalance()) < 300) {
                 return ErrorCategory.STRATEGIC;
             }
             return ErrorCategory.POSITIONAL;
@@ -70,14 +70,14 @@ public class AdvancedErrorClassifier implements ErrorClassifier {
 
     private boolean isTacticalError(RawMoveEvaluation eval) {
 
-        if (eval.getCentipawnLoss() < 100) return false;
+        if (eval.cpLoss() < 100) return false;
 
-        if (eval.isCapture() || eval.isCheck() || eval.isPromotion()) {
+        if (eval.capture() || eval.check() || eval.promotion()) {
             return true;
         }
 
-        if (Math.abs(eval.getEvalBefore() - eval.getEvalAfter()) >= 150 &&
-                Math.abs(eval.getMaterialBalance()) >= 200) {
+        if (Math.abs(eval.evalBefore() - eval.evalAfter()) >= 150 &&
+                Math.abs(eval.materialBalance()) >= 200) {
             return true;
         }
 
@@ -87,7 +87,7 @@ public class AdvancedErrorClassifier implements ErrorClassifier {
     private boolean hasTacticalPattern(RawMoveEvaluation eval) {
 
         Board board = new Board();
-        board.loadFromFen(eval.getFenAfter());
+        board.loadFromFen(eval.fenAfter());
 
         Side attacker = board.getSideToMove();
         Side victim = attacker.flip();
@@ -160,8 +160,7 @@ public class AdvancedErrorClassifier implements ErrorClassifier {
 
 
     private boolean isPositionCollapsed(RawMoveEvaluation eval) {
-        return eval.getLegalMovesCount() <= 3 &&
-                eval.getCentipawnLoss() >= 150;
+        return eval.legalMovesCount() <= 3 && eval.cpLoss() >= 150;
     }
 
     private static int materialValue(PieceType type) {

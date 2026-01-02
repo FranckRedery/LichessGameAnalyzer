@@ -38,8 +38,8 @@ public class LichessAnalyzerApp {
 
                 var analysis = analysisService.analyzeGame(game, 17, side);
 
-                System.out.println("Game " + game.getGameId() + " | Errors found: " + analysis.getErrors());
-                allErrors.addAll(analysis.getErrors());
+                System.out.println("Game " + game.gameId() + " | Errors found: " + analysis.errors());
+                allErrors.addAll(analysis.errors());
             }
 
             GameErrorReportGenerator reportGenerator = new GameErrorReportGenerator(allErrors);
@@ -53,8 +53,8 @@ public class LichessAnalyzerApp {
     }
 
     private static Side determinePlayerSide(LichessGame game, String username) {
-        if (username.equalsIgnoreCase(game.getWhite())) return Side.WHITE;
-        if (username.equalsIgnoreCase(game.getBlack())) return Side.BLACK;
+        if (username.equalsIgnoreCase(game.white())) return Side.WHITE;
+        if (username.equalsIgnoreCase(game.black())) return Side.BLACK;
         return null;
     }
 

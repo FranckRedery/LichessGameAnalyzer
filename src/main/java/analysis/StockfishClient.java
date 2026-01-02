@@ -38,16 +38,16 @@ public class StockfishClient {
 
     public List<RawMoveEvaluation> analyzePGN(LichessGame game, int depth, Side targetColor) throws Exception {
 
-        if (game == null || game.getPgn() == null || game.getPgn().isEmpty()) {
+        if (game == null || game.pgn() == null || game.pgn().isEmpty()) {
             throw new IllegalArgumentException("Invalid game or PGN data.");
         }
 
-        String gameId = game.getGameId();
+        String gameId = game.gameId();
         List<RawMoveEvaluation> evaluations = new ArrayList<>();
 
         uci.uciNewGame();
 
-        List<String> moves = PGNParser.convertPgnToUciMoves(game.getPgn());
+        List<String> moves = PGNParser.convertPgnToUciMoves(game.pgn());
         Board board = new Board();
 
         for (String uciMove : moves) {
@@ -120,8 +120,8 @@ public class StockfishClient {
             Optional<OpeningResponse> opening = openingExplorer.getOpeningFromFen(fenBefore);
 
             boolean inOpeningTheory = opening.isPresent();
-            String openingName = opening.map(o -> o.name).orElse(null);
-            String openingEco = opening.map(o -> o.eco).orElse(null);
+            String openingName = opening.map(OpeningResponse::name).orElse(null);
+            String openingEco = opening.map(OpeningResponse::eco).orElse(null);
 
         /* ==========================
            GAME PHASE

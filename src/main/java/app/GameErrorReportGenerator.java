@@ -338,17 +338,17 @@ public class GameErrorReportGenerator {
 
     private String generateSummarySection() {
         int totalErrors = errors.size();
-        int blunders = (int) errors.stream().filter(e -> e.getSeverity() == ErrorSeverity.BLUNDER).count();
-        int mistakes = (int) errors.stream().filter(e -> e.getSeverity() == ErrorSeverity.MISTAKE).count();
-        int inaccuracies = (int) errors.stream().filter(e -> e.getSeverity() == ErrorSeverity.INACCURACY).count();
+        int blunders = (int) errors.stream().filter(e -> e.severity() == ErrorSeverity.BLUNDER).count();
+        int mistakes = (int) errors.stream().filter(e -> e.severity() == ErrorSeverity.MISTAKE).count();
+        int inaccuracies = (int) errors.stream().filter(e -> e.severity() == ErrorSeverity.INACCURACY).count();
 
         double avgCentipawnLoss = errors.stream()
-                .mapToDouble(GameError::getCentipawnLoss)
+                .mapToDouble(GameError::centipawnLoss)
                 .average()
                 .orElse(0.0);
 
         long uniqueGames = errors.stream()
-                .map(GameError::getGameId)
+                .map(GameError::gameId)
                 .distinct()
                 .count();
 
@@ -441,7 +441,7 @@ public class GameErrorReportGenerator {
 
     private String generatePhaseStatistics() {
         Map<GamePhase, Long> phaseCount = errors.stream()
-                .collect(Collectors.groupingBy(GameError::getPhase, Collectors.counting()));
+                .collect(Collectors.groupingBy(GameError::phase, Collectors.counting()));
 
         StringBuilder html = new StringBuilder();
         html.append("                <div class='stat-card'>\n");
@@ -461,7 +461,7 @@ public class GameErrorReportGenerator {
 
     private String generateCategoryStatistics() {
         Map<ErrorCategory, Long> categoryCount = errors.stream()
-                .collect(Collectors.groupingBy(GameError::getCategory, Collectors.counting()));
+                .collect(Collectors.groupingBy(GameError::category, Collectors.counting()));
 
         StringBuilder html = new StringBuilder();
         html.append("                <div class='stat-card'>\n");
@@ -483,12 +483,12 @@ public class GameErrorReportGenerator {
 
     private String generateColorStatistics() {
         Map<Side, Long> colorCount = errors.stream()
-                .collect(Collectors.groupingBy(GameError::getPlayerColor, Collectors.counting()));
+                .collect(Collectors.groupingBy(GameError::playerColor, Collectors.counting()));
 
         Map<Side, Double> avgCpLoss = errors.stream()
                 .collect(Collectors.groupingBy(
-                        GameError::getPlayerColor,
-                        Collectors.averagingDouble(GameError::getCentipawnLoss)
+                        GameError::playerColor,
+                        Collectors.averagingDouble(GameError::centipawnLoss)
                 ));
 
         StringBuilder html = new StringBuilder();
@@ -521,60 +521,60 @@ public class GameErrorReportGenerator {
         html.append("            <h2>🔍 Dettaglio Errori</h2>\n");
 
         List<GameError> sortedErrors = errors.stream()
-                .sorted(Comparator.comparingDouble(GameError::getCentipawnLoss).reversed())
+                .sorted(Comparator.comparingDouble(GameError::centipawnLoss).reversed())
                 .collect(Collectors.toList());
 
         for (GameError error : sortedErrors) {
             html.append("            <div class='error-card'>\n");
             html.append("                <div class='error-header'>\n");
             html.append("                    <div>\n");
-            html.append("                        <strong>Mossa ").append(error.getMoveNumber()).append("</strong> - ");
-            html.append(error.getPlayerColor().name()).append(" | ");
-            html.append(error.getOpeningName() != null ? error.getOpeningName() : "Unknown Opening");
+            html.append("                        <strong>Mossa ").append(error.moveNumber()).append("</strong> - ");
+            html.append(error.playerColor().name()).append(" | ");
+            html.append(error.openingName() != null ? error.openingName() : "Unknown Opening");
             html.append("                    </div>\n");
-            html.append("                    <span class='severity-badge severity-").append(error.getSeverity().name()).append("'>");
-            html.append(error.getSeverity().name()).append("</span>\n");
+            html.append("                    <span class='severity-badge severity-").append(error.severity().name()).append("'>");
+            html.append(error.severity().name()).append("</span>\n");
             html.append("                </div>\n");
             html.append("                <div class='error-body'>\n");
 
             html.append("                    <div class='error-info'>\n");
             html.append("                        <span class='error-info-label'>Fase</span>\n");
-            html.append("                        <span class='error-info-value'>").append(error.getPhase().name()).append("</span>\n");
+            html.append("                        <span class='error-info-value'>").append(error.phase().name()).append("</span>\n");
             html.append("                    </div>\n");
 
             html.append("                    <div class='error-info'>\n");
             html.append("                        <span class='error-info-label'>Categoria</span>\n");
-            html.append("                        <span class='error-info-value'>").append(error.getCategory().name().replace("_", " ")).append("</span>\n");
+            html.append("                        <span class='error-info-value'>").append(error.category().name().replace("_", " ")).append("</span>\n");
             html.append("                    </div>\n");
 
             html.append("                    <div class='error-info'>\n");
             html.append("                        <span class='error-info-label'>CP Loss</span>\n");
-            html.append("                        <span class='error-info-value'>").append(String.format("%.0f", error.getCentipawnLoss())).append("</span>\n");
+            html.append("                        <span class='error-info-value'>").append(String.format("%.0f", error.centipawnLoss())).append("</span>\n");
             html.append("                    </div>\n");
 
             html.append("                    <div class='error-info'>\n");
             html.append("                        <span class='error-info-label'>Mossa Giocata</span>\n");
-            html.append("                        <span class='error-info-value'>").append(error.getPlayedMoveSan()).append("</span>\n");
+            html.append("                        <span class='error-info-value'>").append(error.playedMoveSan()).append("</span>\n");
             html.append("                    </div>\n");
 
             html.append("                    <div class='error-info'>\n");
             html.append("                        <span class='error-info-label'>Mossa Migliore</span>\n");
-            html.append("                        <span class='error-info-value'>").append(error.getBestMoveUci()).append("</span>\n");
+            html.append("                        <span class='error-info-value'>").append(error.bestMoveUci()).append("</span>\n");
             html.append("                    </div>\n");
 
             html.append("                    <div class='error-info'>\n");
             html.append("                        <span class='error-info-label'>Eval Prima</span>\n");
-            html.append("                        <span class='error-info-value'>").append(String.format("%.2f", error.getEvalBefore())).append("</span>\n");
+            html.append("                        <span class='error-info-value'>").append(String.format("%.2f", error.evalBefore())).append("</span>\n");
             html.append("                    </div>\n");
 
             html.append("                    <div class='error-info'>\n");
             html.append("                        <span class='error-info-label'>Eval Dopo</span>\n");
-            html.append("                        <span class='error-info-value'>").append(String.format("%.2f", error.getEvalAfter())).append("</span>\n");
+            html.append("                        <span class='error-info-value'>").append(String.format("%.2f", error.evalAfter())).append("</span>\n");
             html.append("                    </div>\n");
 
             html.append("                    <div class='error-info'>\n");
             html.append("                        <span class='error-info-label'>Game ID</span>\n");
-            html.append("                        <span class='error-info-value'>").append(error.getGameId()).append("</span>\n");
+            html.append("                        <span class='error-info-value'>").append(error.gameId()).append("</span>\n");
             html.append("                    </div>\n");
 
             html.append("                </div>\n");
@@ -587,18 +587,18 @@ public class GameErrorReportGenerator {
 
     private String getChartScripts() {
         Map<GamePhase, Long> phaseData = errors.stream()
-                .collect(Collectors.groupingBy(GameError::getPhase, Collectors.counting()));
+                .collect(Collectors.groupingBy(GameError::phase, Collectors.counting()));
 
         Map<ErrorCategory, Long> categoryData = errors.stream()
-                .collect(Collectors.groupingBy(GameError::getCategory, Collectors.counting()));
+                .collect(Collectors.groupingBy(GameError::category, Collectors.counting()));
 
         Map<ErrorSeverity, Long> severityData = errors.stream()
-                .collect(Collectors.groupingBy(GameError::getSeverity, Collectors.counting()));
+                .collect(Collectors.groupingBy(GameError::severity, Collectors.counting()));
 
         Map<ErrorSeverity, Double> cpLossData = errors.stream()
                 .collect(Collectors.groupingBy(
-                        GameError::getSeverity,
-                        Collectors.averagingDouble(GameError::getCentipawnLoss)
+                        GameError::severity,
+                        Collectors.averagingDouble(GameError::centipawnLoss)
                 ));
 
         return String.format("""

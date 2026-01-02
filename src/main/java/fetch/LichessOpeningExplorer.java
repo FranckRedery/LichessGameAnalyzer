@@ -38,7 +38,7 @@ public class LichessOpeningExplorer {
 
             OpeningResponse opening = mapper.readValue(response.body(), OpeningResponse.class);
 
-            return opening.name != null ? Optional.of(opening) : Optional.empty();
+            return opening.name() != null ? Optional.of(opening) : Optional.empty();
 
         } catch (Exception e) {
             return Optional.empty();

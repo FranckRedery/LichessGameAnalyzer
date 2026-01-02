@@ -1,9 +1,5 @@
 package domain;
 
-public class OpeningResponse {
-
-    public String eco;
-    public String name;
-    public String moves;
+public record OpeningResponse(String eco, String name, String moves) {
 
 }
